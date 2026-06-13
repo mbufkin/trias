@@ -6,3 +6,4 @@ dist/
 venv/
 config.yaml
 .mailbox/
+.trias/

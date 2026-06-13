@@ -51,7 +51,12 @@ def _submit_task(config: dict, task: dict, task_id: str) -> bool:
 
     for f in files:
         src = os.path.join(base_dir, f)
-        dst_name = os.path.basename(f)  # strip directory, keep filename
+        dst_name = f  # preserve relative path for subdirectory support
+        dst_dir = os.path.dirname(str(uploads_dir / dst_name))
+        if _is_remote():
+            _run(["ssh", REMOTE_HOST, "mkdir", "-p", dst_dir])
+        else:
+            Path(dst_dir).mkdir(parents=True, exist_ok=True)
         if _is_remote():
             result = _run(["scp", src, f"{remote_prefix}{uploads_dir}/{dst_name}"])
         else:
@@ -160,7 +165,7 @@ def cmd_pull(config: dict, task_id: str, output_dir: str = "."):
         print(line)
 
 
-def cmd_submit(config: dict, files: list[str], focus: str, wait: bool = False):
+def cmd_submit(config: dict, files: list[str], focus: str, wait: bool = False, timeout: int = 900):
     """Submit a review task."""
     task_id = datetime.now().strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:8]
 
@@ -171,7 +176,7 @@ def cmd_submit(config: dict, files: list[str], focus: str, wait: bool = False):
 
     task = {
         "task_id": task_id,
-        "files": [os.path.basename(f) for f in files],
+        "files": [os.path.relpath(f, os.getcwd()) for f in files],
         "base_dir": os.getcwd(),
         "focus": focus,
         "submitted": datetime.now().isoformat(),
@@ -186,15 +191,14 @@ def cmd_submit(config: dict, files: list[str], focus: str, wait: bool = False):
     print(f"Focus: {focus}")
 
     if wait:
-        cmd_wait(config, task_id)
+        cmd_wait(config, task_id, timeout)
     else:
         print(f"\nStatus: review-council status")
         print(f"Results: review-council pull {task_id}")
 
 
-def cmd_wait(config: dict, task_id: str):
+def cmd_wait(config: dict, task_id: str, max_wait: int = 900):
     """Wait for task completion."""
-    MAX_WAIT = 900
     POLL_INTERVAL = 30
     status_dir = config["paths"]["status"]
     status_path = f"{status_dir}/{task_id}.json"
@@ -203,7 +207,7 @@ def cmd_wait(config: dict, task_id: str):
     elapsed = 0
     last_status = ""
 
-    while elapsed < MAX_WAIT:
+    while elapsed < max_wait:
         time.sleep(POLL_INTERVAL)
         elapsed += POLL_INTERVAL
 
@@ -242,7 +246,7 @@ def cmd_wait(config: dict, task_id: str):
 
         print(".", end="", flush=True)
 
-    print(f"\n⏰ Timed out after {MAX_WAIT}s.")
+    print(f"\n⏰ Timed out after {max_wait}s.")
 
 
 def main():
@@ -255,6 +259,7 @@ def main():
     p_submit.add_argument("files", nargs="+", help="Files to review")
     p_submit.add_argument("--focus", help="Review focus areas")
     p_submit.add_argument("--wait", action="store_true", help="Wait for results")
+    p_submit.add_argument("--timeout", type=int, default=900, help="Max seconds to wait (default: 900)")
 
     # status
     sub.add_parser("status", help="Check task status")
@@ -293,7 +298,7 @@ def main():
         cmd_pull(config, args.task_id, args.output)
     elif args.command == "submit":
         focus = args.focus or config["review"]["focus"]
-        cmd_submit(config, args.files, focus, args.wait)
+        cmd_submit(config, args.files, focus, args.wait, args.timeout)
     else:
         parser.print_help()
 

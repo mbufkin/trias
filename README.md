@@ -31,6 +31,9 @@ trias worker &
 # Submit code for review
 trias submit --wait src/*.py
 
+# With a custom timeout (default: 900s)
+trias submit --wait --timeout 300 *.py
+
 # Or submit and check back later
 trias submit --focus "security, performance" server.py
 trias status
@@ -57,8 +60,10 @@ trias pull 20260613-092041-abc12345
 
 All configurable in `config.yaml`.
 
-> **Dogfooded:** Trias was reviewed by all 3 of its own reviewers across
-> 3 iterations before release — 10 bugs found and fixed by the tool itself.
+> **Dogfooded:** Trias reviews its own code before every push. The council
+> catches real issues — but it can also flag false positives (pattern matching
+> without execution-model understanding). Every finding gets human verification.
+> Trias is a second set of eyes, not a replacement for your own.
 
 ## Hardware
 
