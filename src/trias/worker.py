@@ -35,21 +35,28 @@ def _truncate_lines(text: str, max_chars: int) -> str:
     """Truncate to complete lines only — never cut mid-line or mid-function.
 
     Returns the text if under max_chars. Otherwise returns complete lines
-    up to max_chars with an omission note.
+    up to max_chars, reserving space for the omission note so total output
+    never exceeds max_chars.
     """
     if len(text) <= max_chars:
         return text
     lines = text.rstrip("\n").split("\n")
     result = []
     total = 0
+    # Reserve space for the omission note line
+    note_template = "\n[... {count} lines omitted — full file available to reviewers above]"
+    # Estimate worst-case note size (assume up to 9999 lines = 4 digits)
+    note_budget = len(note_template.format(count=9999))
+    usable = max_chars - note_budget
     for i, line in enumerate(lines):
-        nl = 1 if i < len(lines) - 1 else 0  # newline only between lines
-        if total + len(line) + nl > max_chars:
+        nl = 1 if i < len(lines) - 1 else 0
+        if total + len(line) + nl > usable:
             break
         result.append(line)
         total += len(line) + nl
     omitted = len(lines) - len(result)
-    result.append(f"\n[... {omitted} lines omitted — full file available to reviewers above]")
+    note = note_template.format(count=omitted)
+    result.append(note)
     return "\n".join(result)
 
 
@@ -486,7 +493,7 @@ def process_task(config: dict, task_path: Path) -> bool:
         f"Synthesize these {len(reviews)} independent code reviews into one final report.\n\n"
         + _ARCH_GLOSSARY
         + fp_memory.format_for_prompt()
-        + f"\nCODE:\n{_truncate_lines(code, 4000)}\n\n"
+        + f"\nCODE:\n{_truncate_lines(code, 5000)}\n\n"
         + f"REVIEWS:\n{all_reviews[:5000]}\n\n"
         + "CRITICAL — Before reporting any finding, verify it:\n\n"
         + "STEP 1 — TRACE THE DATA FLOW (for taint/injection findings):\n"
