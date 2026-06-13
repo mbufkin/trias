@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trias"
+version = "0.1.0"
+description = "Local-first multi-model code review — three LLMs, one report"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = [
+    "PyYAML>=6.0",
+]
+
+[project.scripts]
+trias = "trias.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/mbufkin/trias"
+Repository = "https://github.com/mbufkin/trias"
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]

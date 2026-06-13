@@ -1,0 +1,18 @@
+[Unit]
+Description=Review Council — multi-model code review daemon
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=review-council worker
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+# Ensure Ollama is on PATH
+Environment=PATH=/home/%u/.local/bin:/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=default.target

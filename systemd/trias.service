@@ -1,0 +1,16 @@
+[Unit]
+Description=Trias — local-first multi-model code review daemon
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=trias worker
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+Environment=PATH=/home/%u/.local/bin:/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=default.target
