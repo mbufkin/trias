@@ -138,6 +138,76 @@ Three reviewers, three perspectives, one synthesis. The English "triage"
 descends from the same root: sorting by priority, which is exactly what
 the synthesis report does.
 
+## Development Workflow: PRD + Trias Gate
+
+Trias development itself follows a Ralph-inspired workflow: small, testable
+user stories with machine-readable pass/fail flags, append-only progress
+logging, and Trias as the pre-commit quality gate.
+
+### PRD format (`prd.json`)
+
+Each feature is a user story with a `passes` flag — no ambiguity about
+what "done" means:
+
+```json
+[
+  {
+    "id": 1,
+    "story": "trias submit rejects files over 2MB with a clear error",
+    "passes": false,
+    "test": "echo 'x' | trias submit --stdin big-file.py → exit 1"
+  },
+  {
+    "id": 2,
+    "story": "council models configurable via TRIAS_COUNCIL env var",
+    "passes": true
+  }
+]
+```
+
+One feature per iteration. Mark `passes: true` when done (with tests).
+This keeps the AI and the human aligned on exactly what success looks like.
+
+### Progress log (`progress.txt`)
+
+Append-only inter-session memory. After each feature, the developer
+(or agent) appends what was learned — gotchas, fragile areas, context
+the next session will need:
+
+```
+2026-06-13 — added ollama_generate timeout (30s). 
+Model unload on the PGX takes 8-12s; don't shorten the 
+unload wait below 10s or you'll get partial loads. 
+GPU locks at 120B — never accidentally pull that model.
+```
+
+Delete `progress.txt` when the sprint is done. Until then, it's cheap
+persistent memory that works with any model.
+
+### Pre-push gate
+
+Before pushing, run Trias against the diff:
+
+```bash
+# Review staged changes
+trias submit --diff HEAD~1 --wait
+
+# Or set up a pre-push hook
+cat > .git/hooks/pre-push << 'EOF'
+#!/bin/bash
+echo "Trias reviewing $(git diff --stat origin/main)..."
+trias submit --diff origin/main --wait --threshold MEDIUM
+if [ $? -ne 0 ]; then
+  echo "Trias found MEDIUM+ issues. Push blocked."
+  exit 1
+fi
+EOF
+chmod +x .git/hooks/pre-push
+```
+
+Trias reviewing its own code before every push. The council catches
+what a single-model review misses.
+
 ## License
 
 MIT
