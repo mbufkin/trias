@@ -31,6 +31,28 @@ from .config import load_config
 logger = logging.getLogger("trias")
 
 
+def _truncate_lines(text: str, max_chars: int) -> str:
+    """Truncate to complete lines only — never cut mid-line or mid-function.
+
+    Returns the text if under max_chars. Otherwise returns complete lines
+    up to max_chars with an omission note.
+    """
+    if len(text) <= max_chars:
+        return text
+    lines = text.rstrip("\n").split("\n")
+    result = []
+    total = 0
+    for i, line in enumerate(lines):
+        nl = 1 if i < len(lines) - 1 else 0  # newline only between lines
+        if total + len(line) + nl > max_chars:
+            break
+        result.append(line)
+        total += len(line) + nl
+    omitted = len(lines) - len(result)
+    result.append(f"\n[... {omitted} lines omitted — full file available to reviewers above]")
+    return "\n".join(result)
+
+
 class FPMemory:
     """Persistent false-positive memory — learns which patterns are safe.
 
@@ -48,24 +70,45 @@ class FPMemory:
     def _load(self):
         if self._path.exists():
             try:
-                data = json.loads(self._path.read_text())
+                text = self._path.read_text()
+                if not text.strip():
+                    self.entries = []
+                    return
+                data = json.loads(text)
                 self.entries = data.get("entries", [])
             except (json.JSONDecodeError, KeyError):
                 self.entries = []
 
     def _save(self):
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        self._path.write_text(json.dumps(
+        content = json.dumps(
             {"entries": self.entries, "updated": datetime.now(timezone.utc).isoformat()},
-            indent=2))
+            indent=2)
+        # Atomic write: write to temp then rename — prevents corruption on crash
+        import tempfile
+        tmp = tempfile.NamedTemporaryFile(
+            mode="w", dir=str(self._path.parent), delete=False,
+            prefix=".fp_memory", suffix=".tmp")
+        try:
+            tmp.write(content)
+            tmp.close()
+            os.replace(tmp.name, str(self._path))  # atomic on POSIX
+        except Exception:
+            Path(tmp.name).unlink(missing_ok=True)
+            raise
 
     def add(self, pattern: str, claimed_issue: str, verdict: str,
             file_pattern: str = "", code_snippet: str = ""):
         """Record a finding verified as false positive."""
+        # Normalize to prevent FP pollution from case/whitespace variations
+        norm_pattern = pattern.strip().lower()
+        norm_file = file_pattern.strip().lower()
+        norm_verdict = verdict.strip()
+
         # Deduplicate — same pattern + same file = skip
         for entry in self.entries:
-            if (entry.get("pattern") == pattern and
-                    entry.get("file_pattern") == file_pattern):
+            if (entry.get("pattern", "").strip().lower() == norm_pattern and
+                    entry.get("file_pattern", "").strip().lower() == norm_file):
                 entry["reflag_count"] = entry.get("reflag_count", 0) + 1
                 entry["last_reflagged"] = datetime.now(timezone.utc).isoformat()
                 self._save()
@@ -77,7 +120,7 @@ class FPMemory:
             "file_pattern": file_pattern,
             "code_snippet": code_snippet[:200] if code_snippet else "",
             "claimed_issue": claimed_issue[:200],
-            "actual_verdict": verdict[:300],
+            "actual_verdict": verdict.strip()[:300],
             "first_seen": datetime.now(timezone.utc).isoformat(),
             "reflag_count": 0,
             "last_reflagged": None,
@@ -435,7 +478,7 @@ def process_task(config: dict, task_path: Path) -> bool:
     write_status(config, task_id, "synthesizing")
 
     all_reviews = "\n\n---\n\n".join(
-        f"## Reviewer {r['round']}: {r['label']} ({r['model']})\n{r['response'][:2500]}"
+        f"## Reviewer {r['round']}: {r['label']} ({r['model']})\n{_truncate_lines(r['response'], 2500)}"
         for r in reviews
     )
 
@@ -443,7 +486,7 @@ def process_task(config: dict, task_path: Path) -> bool:
         f"Synthesize these {len(reviews)} independent code reviews into one final report.\n\n"
         + _ARCH_GLOSSARY
         + fp_memory.format_for_prompt()
-        + f"\nCODE:\n{code[:2500]}\n\n"
+        + f"\nCODE:\n{_truncate_lines(code, 4000)}\n\n"
         + f"REVIEWS:\n{all_reviews[:5000]}\n\n"
         + "CRITICAL — Before reporting any finding, verify it:\n\n"
         + "STEP 1 — TRACE THE DATA FLOW (for taint/injection findings):\n"

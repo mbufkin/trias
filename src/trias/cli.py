@@ -165,7 +165,7 @@ def cmd_pull(config: dict, task_id: str, output_dir: str = "."):
         print(line)
 
 
-def cmd_submit(config: dict, files: list[str], focus: str, wait: bool = False, timeout: int = 900):
+def cmd_submit(config: dict, files: list[str], focus: str, wait: bool = False, timeout: int = 1200):
     """Submit a review task."""
     task_id = datetime.now().strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:8]
 
@@ -197,9 +197,9 @@ def cmd_submit(config: dict, files: list[str], focus: str, wait: bool = False, t
         print(f"Results: review-council pull {task_id}")
 
 
-def cmd_wait(config: dict, task_id: str, max_wait: int = 900):
+def cmd_wait(config: dict, task_id: str, max_wait: int = 1200):
     """Wait for task completion."""
-    POLL_INTERVAL = 30
+    POLL_INTERVAL = 15
     status_dir = config["paths"]["status"]
     status_path = f"{status_dir}/{task_id}.json"
 
@@ -259,7 +259,7 @@ def main():
     p_submit.add_argument("files", nargs="+", help="Files to review")
     p_submit.add_argument("--focus", help="Review focus areas")
     p_submit.add_argument("--wait", action="store_true", help="Wait for results")
-    p_submit.add_argument("--timeout", type=int, default=900, help="Max seconds to wait (default: 900)")
+    p_submit.add_argument("--timeout", type=int, default=1200, help="Max seconds to wait (default: 1200)")
 
     # status
     sub.add_parser("status", help="Check task status")
