@@ -1,4 +1,9 @@
-"""Review Council configuration — all paths, models, and defaults."""
+"""Review Council configuration — all paths, models, and defaults.
+
+Configuration is loaded from a YAML file (or defaults). The defaults
+are stored in a private module-level dict; all access goes through
+load_config() which returns a deep-merged copy — no shared mutable state.
+"""
 
 import os
 from pathlib import Path
@@ -7,10 +12,10 @@ from typing import Any
 import yaml
 
 
-DEFAULT_CONFIG = {
+# Private — never mutate. load_config() returns a deep-merged copy.
+_DEFAULT_CONFIG: dict[str, Any] = {
     "paths": {
         "mailbox": "~/.trias",
-        # Subdirs created automatically: tasks, status, results, archive, uploads
     },
     "ollama": {
         "url": "http://localhost:11434",
@@ -60,9 +65,22 @@ def _find_config() -> Path | None:
     return None
 
 
+def _deep_merge(base: dict, override: dict) -> None:
+    """Merge override into base in-place. Nested dicts are merged, not replaced."""
+    for key, value in override.items():
+        if key in base and isinstance(base[key], dict) and isinstance(value, dict):
+            _deep_merge(base[key], value)
+        else:
+            base[key] = value
+
+
 def load_config(config_path: str | Path | None = None) -> dict[str, Any]:
-    """Load config, falling back to defaults for missing keys."""
-    config = dict(DEFAULT_CONFIG)  # shallow copy
+    """Load config, merging user overrides onto a copy of the defaults.
+
+    Returns a fresh dict every call — no shared mutable state.
+    """
+    import copy
+    config = copy.deepcopy(_DEFAULT_CONFIG)
 
     if config_path is None:
         config_path = _find_config()
@@ -82,12 +100,3 @@ def load_config(config_path: str | Path | None = None) -> dict[str, Any]:
     config["paths"]["uploads"] = str(mailbox / "uploads")
 
     return config
-
-
-def _deep_merge(base: dict, override: dict) -> None:
-    """Merge override into base in-place (nested dicts merged, not replaced)."""
-    for key, value in override.items():
-        if key in base and isinstance(base[key], dict) and isinstance(value, dict):
-            _deep_merge(base[key], value)
-        else:
-            base[key] = value

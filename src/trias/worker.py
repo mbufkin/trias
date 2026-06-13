@@ -5,6 +5,7 @@ writes synthesized reports.
 
 Key features:
 - Sequential model cycling with keep_alive=0 to free GPU memory
+- HTTP via urllib (stdlib) — no shell subprocess, no injection surface
 - Timeouts on all HTTP calls (fixes hung requests)
 - Empty-response detection (treats as failure)
 - Continues if a reviewer fails — noted in synthesis
@@ -12,14 +13,16 @@ Key features:
 - Status tracking at every stage
 - Task archive after completion
 - Architectural glossary from Matt Pocock's deep module framework
+- FileLockAdapter — stateless seam for concurrency control
 """
 
 import json
 import logging
 import os
-import subprocess
 import sys
 import time
+import urllib.request
+import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -33,52 +36,55 @@ def ensure_dirs(config: dict):
         Path(config["paths"][key]).mkdir(parents=True, exist_ok=True)
 
 
-def acquire_lock(mailbox: str) -> bool:
-    """Acquire a POSIX advisory lock to prevent concurrent workers.
-    Uses fcntl.flock for atomicity — no PID reuse races."""
-    import fcntl
-    lock_file = Path(mailbox) / "worker.lock"
+class FileLockAdapter:
+    """Stateless seam for POSIX advisory file locking.
 
-    try:
-        fd = os.open(str(lock_file), os.O_RDWR | os.O_CREAT, 0o644)
-    except OSError:
-        return False
+    Replaces the old acquire_lock/release_lock function-attribute hack.
+    Encapsulates the lock file descriptor and exposes acquire/release
+    as a clean interface — testable, no global mutable state.
+    """
 
-    try:
-        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        os.write(fd, str(os.getpid()).encode())
-        os.fsync(fd)
-        acquire_lock._fd = fd
-        return True
-    except (OSError, IOError):
-        os.close(fd)
-        return False
+    def __init__(self, lock_path: str):
+        self._path = lock_path
+        self._fd = None
 
-
-def release_lock(mailbox: str):
-    """Release the advisory lock held by this process."""
-    import fcntl
-    fd = getattr(acquire_lock, '_fd', None)
-    if fd is not None:
+    def acquire(self) -> bool:
+        """Try to acquire an exclusive lock. Returns True on success."""
+        import fcntl
         try:
-            fcntl.flock(fd, fcntl.LOCK_UN)
-        except Exception:
-            pass
-        try:
-            os.close(fd)
-        except Exception:
-            pass
-        acquire_lock._fd = None
+            self._fd = os.open(self._path, os.O_RDWR | os.O_CREAT, 0o644)
+            fcntl.flock(self._fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            os.write(self._fd, str(os.getpid()).encode())
+            os.fsync(self._fd)
+            return True
+        except (OSError, IOError):
+            if self._fd is not None:
+                os.close(self._fd)
+                self._fd = None
+            return False
+
+    def release(self):
+        """Release the lock and close the file descriptor."""
+        import fcntl
+        if self._fd is not None:
+            try:
+                fcntl.flock(self._fd, fcntl.LOCK_UN)
+            except Exception:
+                pass
+            try:
+                os.close(self._fd)
+            except Exception:
+                pass
+            self._fd = None
 
 
 def ollama_unload(config: dict, model: str):
     """Tell Ollama to unload a model to free GPU memory."""
+    payload = json.dumps({"model": model, "prompt": "done", "keep_alive": 0}).encode()
+    url = f"{config['ollama']['url']}/api/generate"
     try:
-        subprocess.run(
-            ["curl", "-s", "--max-time", "15",
-             f"{config['ollama']['url']}/api/generate", "-d",
-             json.dumps({"model": model, "prompt": "done", "keep_alive": 0})],
-            capture_output=True, timeout=20, check=True)
+        req = urllib.request.Request(url, data=payload, method="POST")
+        urllib.request.urlopen(req, timeout=20)
     except Exception as e:
         logger.warning("Failed to unload %s: %s", model, e)
 
@@ -86,23 +92,33 @@ def ollama_unload(config: dict, model: str):
 def ollama_generate(config: dict, model: str, prompt: str,
                     timeout: int = 240, num_predict: int = 1536,
                     temperature: float = 0.3) -> str:
-    """Call Ollama generate API. Returns response text or raises."""
-    payload = {
+    """Call Ollama generate API via urllib. Returns response text or raises.
+
+    Uses urllib.request (stdlib, no shell) — avoids the curl subprocess
+    injection surface. All data flows through JSON-encoded request bodies.
+    """
+    payload = json.dumps({
         "model": model,
         "prompt": prompt,
         "stream": False,
         "options": {"temperature": temperature, "num_predict": num_predict},
-    }
+    }).encode()
     url = f"{config['ollama']['url']}/api/generate"
-    resp = subprocess.run(
-        ["curl", "-s", "--max-time", str(timeout + 10),
-         url, "-d", json.dumps(payload)],
-        capture_output=True, text=True, timeout=timeout + 15)
 
-    if resp.returncode != 0:
-        raise RuntimeError(f"curl exited {resp.returncode}: {resp.stderr[:200]}")
+    req = urllib.request.Request(
+        url, data=payload, method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read().decode())
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"Ollama HTTP {e.code}: {e.read().decode()[:200]}")
+    except urllib.error.URLError as e:
+        raise RuntimeError(f"Cannot reach Ollama: {e.reason}")
+    except json.JSONDecodeError:
+        raise RuntimeError("Ollama returned non-JSON response")
 
-    data = json.loads(resp.stdout)
     if "error" in data:
         raise RuntimeError(f"Ollama error: {data['error']}")
     return data.get("response", "")
@@ -122,16 +138,18 @@ def check_model_health(config: dict, model: str, timeout: int = 30,
         logger.warning("Model name failed validation: %s", model)
         return False
 
+    payload = json.dumps({
+        "model": model, "prompt": "ping", "stream": False,
+        "options": {"num_predict": 1},
+    }).encode()
+    url = f"{config['ollama']['url']}/api/generate"
+
     for attempt in range(retries):
         try:
-            result = subprocess.run(
-                ["curl", "-s", "--max-time", str(timeout),
-                 f"{config['ollama']['url']}/api/generate", "-d",
-                 json.dumps({"model": model, "prompt": "ping", "stream": False,
-                            "options": {"num_predict": 1}})],
-                capture_output=True, text=True, timeout=timeout + 5)
-            if result.returncode == 0:
-                data = json.loads(result.stdout)
+            req = urllib.request.Request(url, data=payload, method="POST",
+                                         headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                data = json.loads(resp.read().decode())
                 if data.get("response", "").strip():
                     return True
         except Exception as e:
@@ -383,7 +401,8 @@ def run_worker(config_path: str | None = None):
     tasks_dir = Path(config["paths"]["tasks"])
     poll_interval = config["review"]["poll_interval"]
 
-    if not acquire_lock(mailbox):
+    lock = FileLockAdapter(str(Path(mailbox) / "worker.lock"))
+    if not lock.acquire():
         print("Another worker is running. Exiting.", flush=True)
         sys.exit(0)
 
@@ -393,6 +412,7 @@ def run_worker(config_path: str | None = None):
     healthy = validate_council(config)
     if not healthy:
         logger.error("No healthy models available — exiting.")
+        lock.release()
         sys.exit(1)
     config["_healthy_council"] = healthy
     print(f"Models: {len(healthy)}/{len(config.get('council',[]))} healthy", flush=True)
@@ -416,7 +436,7 @@ def run_worker(config_path: str | None = None):
                         pass
             time.sleep(poll_interval)
     finally:
-        release_lock(mailbox)
+        lock.release()
 
 
 if __name__ == "__main__":

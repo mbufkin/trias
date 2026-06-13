@@ -271,10 +271,10 @@ def main():
     args = parser.parse_args()
 
     if args.command == "init":
-        from .config import DEFAULT_CONFIG
+        from .config import _DEFAULT_CONFIG
         import yaml
         with open(args.output, "w") as f:
-            yaml.dump(DEFAULT_CONFIG, f, default_flow_style=False, sort_keys=False)
+            yaml.dump(_DEFAULT_CONFIG, f, default_flow_style=False, sort_keys=False)
         print(f"Config written: {args.output}")
         return
 
