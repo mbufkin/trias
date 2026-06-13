@@ -99,9 +99,13 @@ def cmd_status(config: dict):
     status_dir = config["paths"]["status"]
 
     if _is_remote():
-        result = _run(["ssh", REMOTE_HOST, "sh", "-c",
-                       f"ls {status_dir}/ 2>/dev/null || true"])
-        files = [f for f in result.stdout.strip().split("\n") if f.endswith('.json')]
+        result = _run(["ssh", REMOTE_HOST, "ls", f"{status_dir}/"],
+                      timeout=15)
+        # ls exits 2 if dir doesn't exist; treat as empty listing
+        if result.returncode != 0 and result.returncode != 2:
+            files = []
+        else:
+            files = [f for f in result.stdout.strip().split("\n") if f.endswith('.json')]
     else:
         files = [f.name for f in Path(status_dir).glob("*.json")]
 

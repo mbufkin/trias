@@ -65,30 +65,30 @@ def _find_config() -> Path | None:
     return None
 
 
-def _deep_merge(base: dict, override: dict) -> None:
-    """Merge override into base in-place. Nested dicts are merged, not replaced."""
+def _deep_merge(base: dict, override: dict) -> dict:
+    """Return a new dict with override merged into base. Pure — no mutation."""
+    import copy
+    result = copy.deepcopy(base)
     for key, value in override.items():
-        if key in base and isinstance(base[key], dict) and isinstance(value, dict):
-            _deep_merge(base[key], value)
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = _deep_merge(result[key], value)
         else:
-            base[key] = value
+            result[key] = copy.deepcopy(value)
+    return result
 
 
 def load_config(config_path: str | Path | None = None) -> dict[str, Any]:
-    """Load config, merging user overrides onto a copy of the defaults.
-
-    Returns a fresh dict every call — no shared mutable state.
-    """
-    import copy
-    config = copy.deepcopy(_DEFAULT_CONFIG)
-
+    """Load config, returning a fresh merge of defaults + user overrides."""
     if config_path is None:
         config_path = _find_config()
 
     if config_path and Path(config_path).exists():
         with open(config_path) as f:
             user_config = yaml.safe_load(f) or {}
-        _deep_merge(config, user_config)
+        config = _deep_merge(_DEFAULT_CONFIG, user_config)
+    else:
+        import copy
+        config = copy.deepcopy(_DEFAULT_CONFIG)
 
     # Expand paths
     mailbox = Path(os.path.expanduser(config["paths"]["mailbox"]))
