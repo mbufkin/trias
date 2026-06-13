@@ -11,6 +11,7 @@ Key features:
 - Synthesis by the strongest model
 - Status tracking at every stage
 - Task archive after completion
+- Architectural glossary from Matt Pocock's deep module framework
 """
 
 import json
@@ -38,7 +39,6 @@ def acquire_lock(mailbox: str) -> bool:
     import fcntl
     lock_file = Path(mailbox) / "worker.lock"
 
-    # Open (or create) the lock file
     try:
         fd = os.open(str(lock_file), os.O_RDWR | os.O_CREAT, 0o644)
     except OSError:
@@ -46,10 +46,8 @@ def acquire_lock(mailbox: str) -> bool:
 
     try:
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        # Write PID for diagnostics only (lock is authoritative)
         os.write(fd, str(os.getpid()).encode())
         os.fsync(fd)
-        # Store fd globally so release can access it
         acquire_lock._fd = fd
         return True
     except (OSError, IOError):
@@ -138,7 +136,7 @@ def check_model_health(config: dict, model: str, timeout: int = 30,
                     return True
         except Exception as e:
             if attempt < retries - 1:
-                delay = backoff_base * (2 ** attempt) + (time.time() % 1)  # jitter
+                delay = backoff_base * (2 ** attempt) + (time.time() % 1)
                 logger.debug("Health check retry %d/%d for %s in %.1fs: %s",
                             attempt + 1, retries, model, delay, e)
                 time.sleep(delay)
@@ -168,7 +166,6 @@ def read_files(file_paths: list[str], base_dir: str, max_chars: int = 5000) -> s
     chunks = []
     for fp in file_paths:
         full = (base / fp).resolve()
-        # Prevent symlink and .. traversal: ensure resolved path stays under base
         if not full.is_relative_to(base):
             chunks.append(f"=== {fp} ===\n[BLOCKED: path escapes base directory]")
             continue
@@ -191,6 +188,22 @@ def write_status(config: dict, task_id: str, status: str, **extra):
         json.dumps(data, indent=2))
 
 
+# Architectural review glossary — based on Matt Pocock's deep module framework
+# https://youtu.be/3MP8D-mdheA
+_ARCH_GLOSSARY = (
+    "SHARED VOCABULARY — apply these concepts in your review:\n"
+    "- Module: a unit of functionality (component group, service, logger, etc.)\n"
+    "- Deep module: hides lots of implementation behind a simple interface (high leverage)\n"
+    "- Shallow module: complex interface with little implementation behind it (low leverage)\n"
+    "- Interface: everything a caller must know to use the module correctly\n"
+    "- Seam: the location where a module's interface lives — where testing/mocking happens\n"
+    "- Adapter: a concrete module that satisfies an interface (e.g., real clock vs fake clock)\n"
+    "- Locality: changes and fixes concentrated in one place (good) vs scattered (bad)\n"
+    "- Leverage: capability gained per unit of interface learned (deep = high leverage)\n"
+    "\n"
+)
+
+
 def process_task(config: dict, task_path: Path) -> bool:
     """Process a single review task. Returns True on success."""
     task_id = task_path.stem
@@ -205,7 +218,6 @@ def process_task(config: dict, task_path: Path) -> bool:
     files = task.get("files", [])
     focus = task.get("focus", config["review"]["focus"])
     base_dir = Path(task.get("base_dir", str(Path.home()))).expanduser().resolve()
-    # Prefer healthy council from startup validation, fall back to config
     council = task.get("council") or config.get("_healthy_council") or config["council"]
     syn_config = config["synthesis"]
     rev_config = config["review"]
@@ -236,14 +248,15 @@ def process_task(config: dict, task_path: Path) -> bool:
         write_status(config, task_id, "reviewing", round=n, total=total,
                      model=model, label=label)
 
-        prompt = f"""Code review — Round {n} of {total}. Review this code thoroughly.
-
-CODE:
-{code}
-
-Focus on: {focus}.
-For each finding: severity (HIGH/MEDIUM/LOW), file:line, category, description.
-Be specific and critical. Be concise. Do not praise — find problems."""
+        prompt = (
+            f"Code review — Round {n} of {total}. Review this code thoroughly.\n\n"
+            + _ARCH_GLOSSARY
+            + f"CODE:\n{code}\n\n"
+            + f"Focus on: {focus}.\n"
+            + "For each finding: severity (HIGH/MEDIUM/LOW), file:line, category, description.\n"
+            + "Flag shallow modules that could be deepened. Identify seams that could be better defined.\n"
+            + "Be specific and critical. Be concise. Do not praise — find problems."
+        )
 
         try:
             t0 = time.time()
@@ -282,23 +295,21 @@ Be specific and critical. Be concise. Do not praise — find problems."""
         for r in reviews
     )
 
-    synth_prompt = f"""Synthesize these {len(reviews)} independent code reviews into one final report.
-
-CODE:
-{code[:2500]}
-
-REVIEWS:
-{all_reviews[:5000]}
-
-Your output:
-## 🔴 CONSENSUS (flagged by 2+ reviewers)
-[table: severity, issue, files, reviewers]
-
-## 🟡 UNIQUE INSIGHTS (important, only one reviewer)
-[table: reviewer, finding, significance]
-
-## 🛠️ PRIORITY RANKING (top 5 must-fix)
-[numbered list with rationale]"""
+    synth_prompt = (
+        f"Synthesize these {len(reviews)} independent code reviews into one final report.\n\n"
+        + _ARCH_GLOSSARY
+        + f"CODE:\n{code[:2500]}\n\n"
+        + f"REVIEWS:\n{all_reviews[:5000]}\n\n"
+        + "Your output:\n"
+        + "## 🔴 CONSENSUS (flagged by 2+ reviewers)\n"
+        + "[table: severity, issue, files, reviewers]\n"
+        + "\n"
+        + "## 🟡 UNIQUE INSIGHTS (important, only one reviewer)\n"
+        + "[table: reviewer, finding, significance]\n"
+        + "\n"
+        + "## 🛠️ PRIORITY RANKING (top 5 must-fix)\n"
+        + "[numbered list with rationale]"
+    )
 
     try:
         t0 = time.time()
@@ -355,7 +366,6 @@ Your output:
     (Path(config["paths"]["status"]) / f"{task_id}.json").write_text(
         json.dumps(meta, indent=2))
 
-    # Archive task
     task_path.rename(Path(config["paths"]["archive"]) / task_path.name)
     print(f"  Done: {result_path} ({total_time:.0f}s total)", flush=True)
     return True
@@ -380,7 +390,6 @@ def run_worker(config_path: str | None = None):
     print(f"Review Council Worker — polling {tasks_dir} every {poll_interval}s",
           flush=True)
 
-    # Health-check all models before processing tasks
     healthy = validate_council(config)
     if not healthy:
         logger.error("No healthy models available — exiting.")

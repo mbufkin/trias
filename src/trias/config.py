@@ -20,15 +20,15 @@ DEFAULT_CONFIG = {
     "council": [
         {
             "model": "qwen3-coder-next:q4_K_M",
-            "label": "MoE agentic — systems, security, correctness",
+            "label": "MoE agentic — systems, security, deep module analysis",
         },
         {
             "model": "qwen2.5-coder:32b",
-            "label": "Dense 32B base — code correctness, logic, edge cases",
+            "label": "Dense 32B base — correctness, logic, seams & interfaces",
         },
         {
             "model": "qwen2.5-coder-opencode:latest",
-            "label": "Dense 32B OpenCode — patterns, refactoring, testability",
+            "label": "Dense 32B OpenCode — patterns, locality, refactoring",
         },
     ],
     "synthesis": {
@@ -41,7 +41,7 @@ DEFAULT_CONFIG = {
         "num_predict": 1536,
         "temperature": 0.3,
         "poll_interval": 15,
-        "focus": "security, correctness, design, maintainability",
+        "focus": "security, correctness, deep vs shallow modules, seams & interfaces, locality, leverage, maintainability",
     },
 }
 
