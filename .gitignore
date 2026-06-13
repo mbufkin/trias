@@ -7,3 +7,4 @@ venv/
 config.yaml
 .mailbox/
 .trias/
+review-*.md

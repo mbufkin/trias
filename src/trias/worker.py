@@ -31,6 +31,125 @@ from .config import load_config
 logger = logging.getLogger("trias")
 
 
+class FPMemory:
+    """Persistent false-positive memory — learns which patterns are safe.
+
+    Semgrep Multimodal inspired: tracks findings verified as NOT exploitable
+    across scans. Injected into synthesis to prevent re-flagging known FPs.
+
+    Stores in a JSON file at the configured mailbox path.
+    """
+
+    def __init__(self, memory_path: str):
+        self._path = Path(memory_path)
+        self.entries: list[dict] = []
+        self._load()
+
+    def _load(self):
+        if self._path.exists():
+            try:
+                data = json.loads(self._path.read_text())
+                self.entries = data.get("entries", [])
+            except (json.JSONDecodeError, KeyError):
+                self.entries = []
+
+    def _save(self):
+        self._path.parent.mkdir(parents=True, exist_ok=True)
+        self._path.write_text(json.dumps(
+            {"entries": self.entries, "updated": datetime.now(timezone.utc).isoformat()},
+            indent=2))
+
+    def add(self, pattern: str, claimed_issue: str, verdict: str,
+            file_pattern: str = "", code_snippet: str = ""):
+        """Record a finding verified as false positive."""
+        # Deduplicate — same pattern + same file = skip
+        for entry in self.entries:
+            if (entry.get("pattern") == pattern and
+                    entry.get("file_pattern") == file_pattern):
+                entry["reflag_count"] = entry.get("reflag_count", 0) + 1
+                entry["last_reflagged"] = datetime.now(timezone.utc).isoformat()
+                self._save()
+                return
+
+        entry = {
+            "id": f"fp_{len(self.entries) + 1:03d}",
+            "pattern": pattern,
+            "file_pattern": file_pattern,
+            "code_snippet": code_snippet[:200] if code_snippet else "",
+            "claimed_issue": claimed_issue[:200],
+            "actual_verdict": verdict[:300],
+            "first_seen": datetime.now(timezone.utc).isoformat(),
+            "reflag_count": 0,
+            "last_reflagged": None,
+        }
+        self.entries.append(entry)
+        logger.info("FP memory: recorded '%s' (%s)", pattern, verdict[:80])
+        self._save()
+
+    def format_for_prompt(self) -> str:
+        """Format FP entries for injection into the synthesis prompt."""
+        if not self.entries:
+            return ""
+
+        lines = [
+            "PREVIOUSLY VERIFIED FALSE POSITIVES — these patterns were flagged",
+            "in past reviews but verified as NOT exploitable. If the current",
+            "reviewers flag the same patterns again, you may skip or auto-downgrade",
+            "them. Reference the FP ID in your verification note.\n",
+        ]
+        for entry in self.entries[-10:]:  # last 10, most relevant
+            lines.append(
+                f"  [{entry['id']}] {entry['pattern']}\n"
+                f"      Claimed: {entry['claimed_issue']}\n"
+                f"      Verdict: {entry['actual_verdict']}\n"
+                f"      File: {entry['file_pattern'] or 'any'}\n"
+                f"      Reflagged: {entry['reflag_count']} times\n"
+            )
+        return "\n".join(lines)
+
+    def extract_and_record(self, synthesis_text: str):
+        """Parse synthesis output for findings verified as NOT exploitable,
+        and record them as FP memories."""
+        import re
+
+        # Catch "Verdict: NOT exploitable" or "Verdict: not exploitable"
+        fp_matches = re.findall(
+            r'(?:Verdict|verdict)[:\s]*.*?(NOT\s+exploitable[^.\n|]*)',
+            synthesis_text, re.IGNORECASE
+        )
+        # Catch "overstates risk" / "concern ... over-stated"
+        overstate_matches = re.findall(
+            r'(?:overstates?\s+risk|over-?stated)[^.\n]*\.',
+            synthesis_text, re.IGNORECASE
+        )
+        # Catch explicit downgrades: "downgrade to MEDIUM" or "downgraded to LOW"
+        downgrade_matches = re.findall(
+            r'downgrad(?:ed?|ing)\s+to\s+(MEDIUM|LOW)[^.\n]*\.',
+            synthesis_text, re.IGNORECASE
+        )
+
+        for match in fp_matches:
+            self.add(
+                pattern="(extracted from synthesis verdict)",
+                claimed_issue="(see synthesis report)",
+                verdict=f"NOT exploitable: {match.strip()[:250]}",
+            )
+
+        for match in overstate_matches:
+            self.add(
+                pattern="(extracted from verification note)",
+                claimed_issue="(see synthesis report)",
+                verdict=f"Overstated: {match.strip()[:250]}",
+            )
+
+        for match in downgrade_matches:
+            self.add(
+                pattern="(extracted from downgrade note)",
+                claimed_issue="(see synthesis report)",
+                verdict=f"Downgraded to {match.strip()[:250]}",
+            )
+
+
 def ensure_dirs(config: dict):
     for key in ["tasks", "status", "results", "archive", "uploads"]:
         Path(config["paths"][key]).mkdir(parents=True, exist_ok=True)
@@ -249,6 +368,10 @@ def process_task(config: dict, task_path: Path) -> bool:
         write_status(config, task_id, "failed", error="All files empty or not found")
         return False
 
+    # Load persistent FP memory to avoid re-flagging known false positives
+    fp_memory_path = Path(config["paths"]["mailbox"]) / "fp_memory.json"
+    fp_memory = FPMemory(str(fp_memory_path))
+
     # === RUN COUNCIL ===
     reviews = []
     prev_model = None
@@ -319,20 +442,36 @@ def process_task(config: dict, task_path: Path) -> bool:
     synth_prompt = (
         f"Synthesize these {len(reviews)} independent code reviews into one final report.\n\n"
         + _ARCH_GLOSSARY
-        + f"CODE:\n{code[:2500]}\n\n"
+        + fp_memory.format_for_prompt()
+        + f"\nCODE:\n{code[:2500]}\n\n"
         + f"REVIEWS:\n{all_reviews[:5000]}\n\n"
-        + "CRITICAL — Before reporting any finding, verify it:\n"
-        + "- For HIGH severity: you MUST construct a concrete exploit chain. "
-        + "What specific input reaches this code path? What specific harm results? "
-        + "If you cannot construct a concrete chain, it is NOT HIGH — downgrade to MEDIUM or discard.\n"
-        + "- Pattern matching alone (e.g., 'string in f-string = injection') is not enough. "
-        + "Check the execution model: is a shell involved? Are args list-based? Is input sanitized?\n"
-        + "- Check for mitigations already present: input validation, list-based subprocess args, "
-        + "restricted path sources (config constants vs user input).\n"
-        + "- If you're unsure after constructing the exploit chain, downgrade and note the uncertainty.\n\n"
+        + "CRITICAL — Before reporting any finding, verify it:\n\n"
+        + "STEP 1 — TRACE THE DATA FLOW (for taint/injection findings):\n"
+        + "  Walk EVERY hop from source to sink. At each hop, ask: what sanitization,\n"
+        + "  validation, or transformation is applied? Format:\n"
+        + "    Source: [where does untrusted data enter?]\n"
+        + "    Hop 1: [function call] → [sanitization applied?]\n"
+        + "    Hop 2: [function call] → [sanitization applied?]\n"
+        + "    ...\n"
+        + "    Sink: [where is data used? command? HTTP? DB? file?]\n"
+        + "    Verdict: [exploitable / not exploitable / uncertain]\n\n"
+        + "STEP 2 — CHECK THE SINK TYPE:\n"
+        + "  - Shell command? Critical — any unsanitized input = RCE.\n"
+        + "  - SQL query? Critical — check for parameterization.\n"
+        + "  - File path? Check for traversal (../) and absolute path escapes.\n"
+        + "  - HTTP URL? Check SSRF risk, but downgrade if internal-only or trusted domains.\n"
+        + "  - Log/print? Usually LOW — informational leak at worst.\n\n"
+        + "STEP 3 — CHECK THE EXECUTION MODEL:\n"
+        + "  - Is a shell involved? (subprocess with shell=True, os.system, backticks)\n"
+        + "  - Are args list-based? (subprocess.run(['cmd', arg]) — NO shell, semicolons inert)\n"
+        + "  - Is input validated? (regex whitelist, type check, allowlist)\n"
+        + "  - Is input source-restricted? (config constant vs user input vs API response)\n\n"
+        + "If you cannot complete the trace OR the sink is low-risk, it is NOT HIGH.\n"
+        + "Downgrade to MEDIUM or LOW and note why.\n"
+        + "Pattern matching alone (e.g., 'string in f-string = injection') is not enough.\n\n"
         + "Your output:\n"
-        + "## 🔴 CONSENSUS (flagged by 2+ reviewers, VERIFIED)\n"
-        + "[table: severity, issue, files, reviewers, exploit_chain]\n"
+        + "## 🔴 CONSENSUS (flagged by 2+ reviewers, VERIFIED with trace)\n"
+        + "[table: severity, issue, files, reviewers, trace_summary]\n"
         + "\n"
         + "## 🟡 UNIQUE INSIGHTS (important, only one reviewer)\n"
         + "[table: reviewer, finding, significance]\n"
@@ -382,6 +521,9 @@ def process_task(config: dict, task_path: Path) -> bool:
 
     result_path = Path(config["paths"]["results"]) / f"{task_id}.md"
     result_path.write_text(report)
+
+    # Extract verified false positives from synthesis for future scans
+    fp_memory.extract_and_record(synthesis)
 
     meta = {
         "task_id": task_id, "status": "completed",
