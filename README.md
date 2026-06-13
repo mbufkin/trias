@@ -44,11 +44,13 @@ trias pull 20260613-092041-abc12345
 
 1. **Submit** — `trias submit file1.py file2.js` drops a task in the mailbox
 2. **Review** — Worker picks it up, cycles 3 models sequentially (unloading
-   between to fit in GPU memory)
-3. **Synthesize** — Strongest model merges findings: consensus, unique
-   insights, priority ranking
-4. **Report** — Markdown report with specific line references and fix
-   suggestions
+   between to fit in GPU memory). Each reviewer must construct a concrete
+   exploit chain for HIGH-severity findings — pattern matching alone doesn't cut it.
+3. **Verify** — Synthesizer challenges every consensus finding: "Can I
+   actually construct an exploit path from this?" Findings that can't be
+   exploited are downgraded or discarded.
+4. **Report** — Markdown report with verified findings, exploit chains for
+   HIGHs, and priority-ranked fixes.
 
 ## Default Council
 
