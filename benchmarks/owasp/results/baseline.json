@@ -1,0 +1,352 @@
+{
+  "BenchmarkTest00180": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Security Review Findings\n\n1. **Path Traversal / Directory Traversal (CWE-22)**: The application directly incorporates user-supplied input (`param`) into a file path using `pathlib.Path` without sanitization or validation. The string manipulation logic (`string84140[4:-17]`) mathematically strips exactly the prefix and suffix that were added, meaning `bar` is identical to the raw user input. An attacker can supply traversal sequences like `../../../etc/passwd` to escape the intended directory"
+  },
+  "BenchmarkTest00008": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Security Findings\n\n1. **Path Traversal (CWE-22)**: The POST route extracts a user-controlled value from a cookie (`BenchmarkTest00008`) and directly uses it to construct a file path via `pathlib.Path(helpers.utils.TESTFILES_DIR) / bar`. There is no validation, sanitization, or canonicalization check to ensure the resolved path remains within the intended base directory. An attacker can inject traversal sequences (e.g., `../../../etc/passwd`) into the cookie to read arbitrary files on the ser"
+  },
+  "BenchmarkTest00618": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Security Review Findings\n\n1. **Path Traversal / Arbitrary File Read (CWE-22)**\n   - **Location:** Lines 38-40 and 50-51\n   - **Description:** The variable `param` is extracted directly from the HTTP request headers without any validation or sanitization. This unsanitized input is later concatenated into a file path (`fileName = f'{helpers.utils.TESTFILES_DIR}/{bar}'`) and used to open a file on the server.\n   - **Exploitation:** An attacker can craft a malicious HTTP header (e.g., `X-Test: ."
+  },
+  "BenchmarkTest00610": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Security Review Findings\n\n1. **Path Traversal / Local File Inclusion (LFI)**: The most critical vulnerability is a path traversal flaw. The variable `bar` is derived from user-controlled input (an HTTP header name via `request.headers.keys()`) and directly interpolated into a file path: `f'{helpers.utils.TESTFILES_DIR}/{bar}'`. There is no validation, sanitization, or normalization to block directory traversal sequences (e.g., `../`). An attacker can craft a request with a custom header cont"
+  },
+  "BenchmarkTest00523": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "**Security Findings:**\n- **Path Traversal / Directory Traversal (CWE-22):** The application directly uses unsanitized user input from the `BenchmarkTest00523` HTTP header to construct a file path (`p = testfiles / bar`). There is no validation to ensure the resolved path stays within the intended `TESTFILES_DIR`. Attackers can inject `../` sequences to escape the directory and access arbitrary files on the server.\n- **Information Disclosure / File Existence Enumeration:** The response explicitly"
+  },
+  "BenchmarkTest00181": {
+    "flagged": false,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Security Review Findings\n\n1. **Input Handling & Path Construction**: The code retrieves user input via `request.form.getlist(\"BenchmarkTest00181\")`, but the subsequent logic completely neutralizes its impact on the file path. `possible = \"ABC\"` and `guess = possible[1]` hardcode `guess` to `'B'`. Consequently, the `match` statement always executes `bar = 'bob'`. User input is never used in path construction.\n2. **Path Traversal**: Since the file path is statically determined (`bar` is always"
+  },
+  "BenchmarkTest01111": {
+    "flagged": true,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "**Findings:**\n\n1. **Path Traversal Vulnerability (CWE-22):** The code directly incorporates user-supplied input (`param`) into a file system path via `pathlib.Path(helpers.utils.TESTFILES_DIR) / bar`. There is no validation, canonicalization, or restriction to prevent directory traversal sequences (e.g., `../`), which could allow an attacker to access files outside the intended base directory.\n2. **Ineffective Sanitization for File Operations:** The `escape_for_html()` function is applied only t"
+  },
+  "BenchmarkTest00170": {
+    "flagged": true,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Security Review Findings\n\n1. **Path Traversal / Directory Traversal (CWE-22)**\n   - The code directly concatenates user-controlled input (`param` from `request.form.getlist(\"BenchmarkTest00170\")`) into a file path: `f'{helpers.utils.TESTFILES_DIR}/{bar}'`.\n   - There is no validation, sanitization, or canonicalization of the input. An attacker can supply values like `../../etc/passwd` to traverse outside the intended directory and access arbitrary files on the server.\n\n2. **Ineffective Use o"
+  },
+  "BenchmarkTest01012": {
+    "flagged": false,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Security Review Findings\n\n1. **User Input Ignored (Dead Code)**: The variable `param` is extracted from the request, stored in a dictionary, and assigned to `bar`, but is immediately overwritten by `bar = map72463['keyA-72463']` (a hardcoded string `'a-Value'`). This means **no user-controlled data ever reaches the file path resolution**, effectively neutralizing any potential path traversal attack.\n\n2. **Incorrect Parameter Extraction**: `request.path.split(\"/\")[1]` extracts the second segm"
+  },
+  "BenchmarkTest00908": {
+    "flagged": true,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Security Review Findings\n\n1. **Path Traversal (CWE-22)**: The core vulnerability lies in how user-supplied input is handled. The `param` variable is extracted directly from the HTTP query string and assigned to `bar`. This value is then concatenated into a file path (`f'{helpers.utils.TESTFILES_DIR}/{bar}'`) without any validation, sanitization, or canonicalization. An attacker can supply directory traversal sequences (e.g., `../../../etc/passwd` or `..\\..\\windows\\system32\\config\\sam`) in th"
+  },
+  "BenchmarkTest00099": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "**Security Vulnerability Findings:**\n\n1. **Critical SQL Injection (CWE-89):** The code directly interpolates unsanitized user input into an SQL query string using an f-string: `sql = f'SELECT username from USERS where password = \\'{bar}\\''`. An attacker can easily manipulate the `BenchmarkTest00099` form parameter to break out of the string context and execute arbitrary SQL commands (e.g., `' OR '1'='1`). There is no use of parameterized queries, prepared statements, or input validation.\n2. **Fa"
+  },
+  "BenchmarkTest00454": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "### Security Findings\n\n1. **SQL Injection (Critical - CWE-89)**: The most severe vulnerability is the direct interpolation of user-controlled input into an SQL query string using an f-string: `sql = f'SELECT username from USERS where password = \\'{bar}\\''`. This string is then passed directly to `cur.execute(sql)`. Base64 encoding and immediately decoding the input does not sanitize, escape, or validate special characters (like `'`, `\"`, or `\\`), leaving the application completely exposed to SQL"
+  },
+  "BenchmarkTest00455": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "**Security Vulnerability Findings:**\n\n1. **SQL Injection (Critical)**: The code directly interpolates user-controlled input (`param` from `request.headers.get(\"BenchmarkTest00455\")`) into an SQL query string using an f-string: `sql = f'SELECT username from USERS where password = \\'{bar}\\''`. This raw string is then passed to `cur.execute(sql)` without any parameterization, escaping, or input validation. An attacker can easily manipulate the `BenchmarkTest00455` HTTP header to inject arbitrary SQ"
+  },
+  "BenchmarkTest00284": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "### Security Review Findings\n\n1. **SQL Injection (CWE-89)**: The most critical vulnerability is present in the query construction: `sql = f'SELECT username from USERS where password = \\'{bar}\\''`. User-controlled input (`param`) is directly interpolated into the SQL string using an f-string. This allows an attacker to inject arbitrary SQL commands, potentially bypassing authentication, extracting sensitive data, or modifying/deleting records.\n2. **Lack of Parameterized Queries**: The code uses s"
+  },
+  "BenchmarkTest00283": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Here are the security findings for the provided code:\n\n1. **SQL Injection (Critical)**: The user-supplied input `param` is directly interpolated into an SQL query string using an f-string (`sql = f'SELECT username from USERS where password = \\'{bar}\\''`). This completely bypasses database parameterization, allowing an attacker to inject malicious SQL syntax. They could extract data, bypass authentication, or modify/delete records.\n2. **Unused Security Utility**: The `escape_for_html` function is"
+  },
+  "BenchmarkTest00192": {
+    "flagged": true,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "### Security Review Findings\n\n1. **SQL Injection (Mitigated):** The code correctly uses parameterized queries (`cur.execute(sql, (bar,))`). This properly separates SQL logic from data, effectively neutralizing SQL injection attacks. This aligns with the `sqli-00` naming convention in OWASP Benchmark, which denotes a secure implementation for this specific threat vector.\n\n2. **Cross-Site Scripting (XSS) Risk:** Database results are concatenated into `RESPONSE` and returned directly without HTML e"
+  },
+  "BenchmarkTest01229": {
+    "flagged": true,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Here are the security findings for the provided code:\n\n1. **Potential Cross-Site Scripting (XSS)**: The `escape_for_html` function is imported but never used. Database query results are concatenated directly into the response string and returned without sanitization. If the database contains user-controlled data, this will lead to Stored or Reflected XSS.\n2. **Insecure Password Handling / Authentication Anti-Pattern**: The SQL query directly compares a parameter against a `password` column (`whe"
+  },
+  "BenchmarkTest01021": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "**Findings:**\n\n1. **Incorrect Input Extraction (Logical Bug)**: The code attempts to extract dynamic input using `parts = request.path.split(\"/\")` and `param = parts[1]`. For the defined route `/benchmark/sqli-00/BenchmarkTest01021`, this will always evaluate to the hardcoded string `'benchmark'`. This is a logical flaw that prevents actual user input from reaching the query, but it does not constitute a security vulnerability. It likely stems from a copy-paste error in the benchmark template wh"
+  },
+  "BenchmarkTest00011": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "### Security Review Findings\n\n1. **SQL Injection Prevention (Secure)**: The code correctly uses parameterized queries (`?` placeholder with `(bar,)` as the parameter tuple) when executing `cur.execute(sql, (bar,))`. This effectively prevents SQL injection attacks by ensuring user-supplied input is treated strictly as data, not executable SQL.\n2. **Cookie Security Configuration**: The `set_cookie` call uses `secure=True`, which ensures the cookie is only transmitted over HTTPS connections. This i"
+  },
+  "BenchmarkTest00285": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Here are the security findings for the provided code:\n\n1. **Reflected Cross-Site Scripting (XSS)**: The `param` variable is extracted directly from user input (`request`) and ultimately returned in the HTTP response without any sanitization or escaping. If this endpoint serves HTML content (Flask defaults to `text/html` for string returns), an attacker can inject malicious JavaScript payloads via the `BenchmarkTest00285` form parameter.\n2. **Unused Security Utility**: The code imports `escape_fo"
+  },
+  "BenchmarkTest00168": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Security Review Findings\n\n1. **Command Injection (CWE-78)**: The most critical vulnerability. User-supplied input (`param`) is directly interpolated into a shell command string (`f\"echo {bar}\"`) and executed without any sanitization or validation. An attacker can easily inject arbitrary commands by providing input like `\"; rm -rf /\"` or `\"$(whoami)\"`.\n2. **Unsafe Use of `shell=True`**: Passing a user-controlled string to `subprocess.run()` with `shell=True` invokes the system's command inter"
+  },
+  "BenchmarkTest00899": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "Here are the security vulnerabilities identified in the provided code:\n\n1. **Command Injection (CWE-78)**: The user-supplied parameter `param` is directly interpolated into a shell command string (`f\"echo {bar}\"`) and passed to `subprocess.run()`. When using `sh -c`, the third argument is treated as a script that the shell parses. An attacker can inject arbitrary commands using shell metacharacters (e.g., `; ls`, `| cat /etc/passwd`, `` `whoami` ``), completely bypassing any intended logic.\n2. *"
+  },
+  "BenchmarkTest00607": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "Here are the security vulnerabilities identified in the provided code:\n\n1. **Command Injection (CWE-78)**: User input is retrieved from a custom HTTP header (`request.headers.getlist(\"BenchmarkTest00607\")`) and directly concatenated into a shell command string (`argStr`). This string is executed via `subprocess.run(argStr, shell=True)`, allowing an attacker to inject arbitrary OS commands by manipulating the header value.\n2. **Unsafe Use of `shell=True`**: Passing a dynamically constructed strin"
+  },
+  "BenchmarkTest00511": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "**Security Findings:**\n\n1. **OS Command Injection (CWE-78):** The code retrieves user-controlled input from the HTTP header `BenchmarkTest00511` and directly interpolates it into a shell command string via an f-string (`f\"echo {bar}\"`). This string is passed as an argument to `sh -c` (or `cmd.exe -c` on Windows) through `subprocess.run()`. The list manipulation (`lst.append`, `pop`) provides zero sanitization or escaping; it merely reassigns the raw input to `bar`. An attacker can inject shell m"
+  },
+  "BenchmarkTest00431": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Security Review Findings\n\n1. **Command Injection (CWE-78)**: The core vulnerability lies in how user-supplied input (`bar`) is handled. The code directly interpolates `bar` into a shell command string (`f\"echo {bar}\"`) and passes it to `subprocess.run()` with `shell=True`. An attacker can easily bypass the trivial `\"BenchmarkTest00431\"` check by crafting a form value like `BenchmarkTest00431; cat /etc/passwd` or `BenchmarkTest00431 && whoami`, resulting in arbitrary command execution on the "
+  },
+  "BenchmarkTest00512": {
+    "flagged": true,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Security Review Findings\n\n1. **Command Injection (CWE-78) via `shell=True`**: The code constructs a system command using string formatting (`argStr += f\"echo {bar}\"`) and executes it with `shell=True`. This is a textbook Command Injection vulnerability pattern. While `bar` is currently hardcoded to `'a_Value'`, the use of `shell=True` combined with dynamic string construction is inherently unsafe. If `bar` were ever derived from user input (like `param`), an attacker could inject arbitrary s"
+  },
+  "BenchmarkTest00900": {
+    "flagged": true,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Security Review Findings\n\n1. **Command Injection (CMDI-00)**: The most critical vulnerability is the use of `subprocess.run()` with `shell=True` combined with string formatting (`f\"echo {bar}\"`). This pattern allows arbitrary command execution if `bar` contains user-controlled data. Attackers could inject shell metacharacters (e.g., `;`, `|`, `&&`) to execute unintended commands on the host system.\n\n2. **Logic Bug Masking Exploitation**: The code stores the user-supplied `param` in `keyB-103"
+  },
+  "BenchmarkTest01097": {
+    "flagged": true,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "**Security Review Findings:**\n\n1. **Command Injection (CWE-78):** The most critical issue is the use of `subprocess.run(argStr, shell=True, ...)` where `argStr` is built using an f-string (`f\"echo {bar}\"`). Although the current condition `if 7 * 42 - num > 200:` evaluates to `True` for the hardcoded `num = 86`, making `bar` constant in this exact snippet, the code explicitly takes user input (`param`) and routes it into a shell command. This is a textbook command injection vulnerability. If an a"
+  },
+  "BenchmarkTest00736": {
+    "flagged": true,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Security Vulnerability Findings\n\n1. **Command Injection (CWE-78)**: The code constructs a shell command string using f-string formatting (`argStr += f\"echo {bar}\"`) and executes it via `subprocess.run()` with `shell=True`. While this specific snippet overwrites `bar` with a hardcoded value (`'a-Value'`) before execution, the pattern is a textbook Command Injection vulnerability. In production code or other benchmark variants where the taint flows from `request.args.get()`, an attacker could "
+  },
+  "BenchmarkTest00350": {
+    "flagged": false,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Security Review Findings\n\n1. **Potential Command Injection Pattern (CWE-78)**: The code constructs a shell command using f-string interpolation (`f\"echo {bar}\"`) and executes it with `shell=True`. This is a classic command injection vulnerability pattern when the interpolated variable contains unsanitized user input.\n2. **Taint Flow is Broken**: Despite the dangerous pattern, the user-supplied parameter `param` is assigned to `map11630['keyB-11630']`, but `bar` is **unconditionally overwritt"
+  },
+  "BenchmarkTest00507": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "**Security Review Findings:**\n\n1. **Insecure Deserialization (Critical - CWE-502):** The most severe vulnerability is the use of `pickle.loads()` on user-controlled input (`bar`, which originates from the HTTP header `BenchmarkTest00507`). Python's `pickle` module is inherently unsafe for untrusted data because deserializing a malicious pickle payload can instantiate arbitrary Python objects and trigger their `__reduce__` methods, leading to Remote Code Execution (RCE). This is a textbook critic"
+  },
+  "BenchmarkTest00898": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Security Review Findings\n\n1. **Insecure Deserialization (CWE-502)**: The core vulnerability lies in `pickle.loads(base64.urlsafe_b64decode(bar))`. Pickle is a Python-specific serialization format that executes arbitrary code during deserialization. Since `bar` is directly sourced from user input (`request.get_query_parameter(\"BenchmarkTest00898\")`), an attacker can craft a malicious pickle payload, encode it in base64, and pass it as the parameter to achieve Remote Code Execution (RCE).\n\n2. "
+  },
+  "BenchmarkTest00735": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "**Security Review Findings:**\n\n1. **Insecure Deserialization (CWE-502):** The most critical vulnerability is the use of `pickle.loads()` on user-controlled input (`request.args.get(\"BenchmarkTest00735\")`). Python's `pickle` module is inherently unsafe for deserializing untrusted data. An attacker can craft a malicious pickle payload that executes arbitrary code during deserialization, leading to Remote Code Execution (RCE).\n\n2. **Ineffective Input Sanitization:** The code applies `markupsafe.esc"
+  },
+  "BenchmarkTest00433": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Security Review Findings\n\n1. **Insecure Deserialization (CWE-502)**: The core vulnerability lies in `yaml.load(bar, Loader=yaml.Loader)`. In PyYAML, `yaml.Loader` is the standard loader that supports arbitrary Python object instantiation via YAML tags (e.g., `!!python/object/new:...`). When parsing untrusted user input (`param` from `request.form`), an attacker can craft a malicious YAML payload that executes arbitrary code on the server during deserialization. This is a critical vulnerabili"
+  },
+  "BenchmarkTest00269": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Here are the security vulnerabilities identified in the provided code:\n\n1. **Insecure YAML Deserialization**: The code uses `yaml.load(bar, Loader=yaml.Loader)`. While specifying a loader is better than relying on the default, `yaml.Loader` still permits arbitrary Python object instantiation if the input contains malicious tags (e.g., `!!python/object/new:os.system`). This can lead to Remote Code Execution (RCE). The secure alternative is `yaml.safe_load()`, which restricts parsing to basic data"
+  },
+  "BenchmarkTest00658": {
+    "flagged": true,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Security Findings\n\n1. **Unsafe YAML Deserialization (CWE-502)**: The core vulnerability lies in `yaml.load(bar, Loader=yaml.Loader)`. In PyYAML, `yaml.Loader` is an alias for `yaml.UnsafeLoader`, which permits arbitrary Python object instantiation during deserialization. If `bar` contained untrusted data, this would allow Remote Code Execution (RCE). Although the current snippet overwrites `bar` with a hardcoded safe string (`'a-Value'`) before loading, the use of an unsafe loader is a criti"
+  },
+  "BenchmarkTest00904": {
+    "flagged": true,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Security Review Findings\n\n1. **Deserialization of Untrusted Data (CWE-502) / YAML DoS Risk**: \n   User-controlled input (`param`) is passed directly to `yaml.safe_load()`. While `safe_load` mitigates arbitrary code execution (RCE) by restricting instantiation to basic Python types, it does **not** protect against Denial of Service (DoS) attacks. Attackers can craft YAML payloads that trigger the \"Billion Laughs\" attack or excessive memory/CPU consumption during parsing, crashing or severely "
+  },
+  "BenchmarkTest00435": {
+    "flagged": true,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Here are the security findings for the provided code:\n\n1. **Reflected Cross-Site Scripting (XSS)**: The code directly returns user-controlled data (`yobj['text']`) in the HTTP response without any HTML escaping or sanitization. Although `escape_for_html` is imported, it is never used. An attacker could craft a YAML payload where the `text` field contains malicious JavaScript, which will be executed in the victim's browser upon response rendering.\n\n2. **Unsafe Deserialization / YAML Parsing Risks"
+  },
+  "BenchmarkTest00434": {
+    "flagged": true,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Security Review Findings\n\n1. **Insecure Deserialization (CWE-502)**: The core vulnerability lies in deserializing untrusted data (`bar`, which originates from user-supplied form input via `request.form` and `thing.doSomething()`) using `yaml.safe_load()`. While `safe_load()` mitigates arbitrary code execution by disabling Python object instantiation, it does not protect against other deserialization-related attacks such as Denial of Service (e.g., YAML bombs, deeply nested structures, or lar"
+  },
+  "BenchmarkTest00997": {
+    "flagged": false,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Security Review Findings\n\n1. **Unreachable User Input / Dead Code**: The conditional `if 7 * 42 - num > 200:` evaluates to `True` unconditionally (`294 - 86 = 208 > 200`). As a result, `bar` is always assigned the hardcoded string `'This_should_always_happen'`, and the user-supplied `param` is never used. This dead code path completely neutralizes any potential injection or deserialization attack from user input in this execution flow.\n\n2. **Safe Deserialization API**: The code uses `yaml.sa"
+  },
+  "BenchmarkTest00161": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "### Security Findings\n\n1. **Arbitrary Code Execution (CWE-78 / CWE-94)**: The most critical vulnerability is the use of `exec(bar)` where `bar` is directly populated with unsanitized user input from `request.form.get(\"BenchmarkTest00161\")`. An attacker can supply valid Python code (e.g., `__import__('os').system('whoami')`) that executes successfully without raising an exception, resulting in Remote Code Execution (RCE).\n\n2. **Ineffective Conditional Sanitization / Dead Branch**: The conditional"
+  },
+  "BenchmarkTest00728": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "**Security Findings:**\n\n1. **Critical Code Injection (CWE-95):** The code passes unsanitized user input directly into Python's `eval()` function. An attacker can supply malicious Python expressions via the `BenchmarkTest00728` query parameter, leading to Remote Code Execution (RCE), data exfiltration, or full server compromise.\n2. **No Input Validation for Code Execution:** The `match` statement does not prevent injection. Cases `'A'` and `'C' | 'D'` assign the raw user parameter to `bar`. Addit"
+  },
+  "BenchmarkTest00986": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "### Security Review Findings\n\n1. **Critical: Remote Code Execution (RCE) via `eval()`**\n   The most severe vulnerability is the direct use of Python's built-in `eval()` function with user-controlled input. The parameter `BenchmarkTest00986` is extracted from the query string, minimally processed, and passed directly to `eval(bar)`. An attacker can supply malicious Python code (e.g., `BenchmarkTest00986=__import__('os').system('id')`) to execute arbitrary commands on the server.\n\n2. **Ineffective"
+  },
+  "BenchmarkTest00503": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "### Security Review Findings\n\n1. **Arbitrary Code Execution (Code Injection)**: The most critical vulnerability is the use of `eval()` on user-controlled input (`request.headers.get(\"BenchmarkTest00503\")`). Since HTTP headers are fully controllable by the client, an attacker can inject arbitrary Python code that will be executed server-side. This can lead to full system compromise, data exfiltration, or remote code execution (RCE).\n\n2. **Ineffective Base64 Obfuscation**: The base64 encoding and "
+  },
+  "BenchmarkTest00159": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "**Security Findings:**\n\n1. **Arbitrary Code Execution / Eval Injection (CWE-95):** The most critical vulnerability is the direct use of `exec(bar)` with user-supplied input. Despite the list manipulation logic, `bar` ultimately resolves to exactly the value of the `BenchmarkTest00159` form parameter. An attacker can inject arbitrary Python code (e.g., `__import__('os').system('cat /etc/passwd')`) which will be executed on the server, resulting in Remote Code Execution (RCE).\n\n2. **Ineffective In"
+  },
+  "BenchmarkTest01164": {
+    "flagged": true,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "**Security Review Findings:**\n\n1. **Arbitrary Code Execution via `eval()` (CWE-95 / Eval Injection)**: The most critical vulnerability is the direct use of Python's `eval()` function on user-controlled input. The parameter `BenchmarkTest01164` is retrieved from the request and assigned to `bar`. Despite the variable name `get_safe_value`, the subsequent conditional logic (`if 'should' not in TestParam:`) evaluates to `False`, routing execution to the `else` block where `bar = param`. This unsani"
+  },
+  "BenchmarkTest00263": {
+    "flagged": true,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Here are the security vulnerabilities and concerns identified in the code:\n\n1. **Critical Remote Code Execution (RCE) via `eval()` Injection**: The most severe vulnerability is the use of Python's built-in `eval()` function on a variable (`bar`) that can be directly influenced by user input (`param`). If an attacker supplies malicious Python code via the `BenchmarkTest00263` form field, and the control flow assigns it to `bar`, `eval()` will execute that code on the server with the privileges of"
+  },
+  "BenchmarkTest00892": {
+    "flagged": true,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "**Security Review Findings:**\n\n1. **Critical Code Injection via `eval()`**: The most severe vulnerability is the direct use of Python's `eval()` function on user-supplied input (`param`). This violates secure coding principles (CWE-95) and can lead to arbitrary code execution if the input validation is bypassed, misunderstood, or exploited through edge cases.\n2. **Insufficient Input Validation**: The check `if not bar.startswith('\\'') or not bar.endswith('\\'') or '\\'' in bar[1:-1]:` attempts to "
+  },
+  "BenchmarkTest00162": {
+    "flagged": true,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Here are the security findings for the provided code:\n\n1. **Arbitrary Code Execution (Code Injection)**: The most critical vulnerability is the use of Python's `exec()` function with data derived from user input (`param`). Although there is a validation check attempting to ensure the input resembles a quoted string literal, this pattern is fundamentally unsafe. If an attacker can control `param` and satisfy or bypass the format check, they can execute arbitrary Python code on the server, leading"
+  },
+  "BenchmarkTest00602": {
+    "flagged": false,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": ""
+  }
+}

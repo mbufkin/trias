@@ -1,0 +1,402 @@
+[
+  {
+    "# test name": "BenchmarkTest00180",
+    " category": "pathtraver",
+    " real vulnerability": "true",
+    " cwe": "22",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00008",
+    " category": "pathtraver",
+    " real vulnerability": "true",
+    " cwe": "22",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00618",
+    " category": "pathtraver",
+    " real vulnerability": "true",
+    " cwe": "22",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00610",
+    " category": "pathtraver",
+    " real vulnerability": "true",
+    " cwe": "22",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00523",
+    " category": "pathtraver",
+    " real vulnerability": "true",
+    " cwe": "22",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00181",
+    " category": "pathtraver",
+    " real vulnerability": "false",
+    " cwe": "22",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest01111",
+    " category": "pathtraver",
+    " real vulnerability": "false",
+    " cwe": "22",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00170",
+    " category": "pathtraver",
+    " real vulnerability": "false",
+    " cwe": "22",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest01012",
+    " category": "pathtraver",
+    " real vulnerability": "false",
+    " cwe": "22",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00908",
+    " category": "pathtraver",
+    " real vulnerability": "false",
+    " cwe": "22",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00099",
+    " category": "sqli",
+    " real vulnerability": "true",
+    " cwe": "89",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00454",
+    " category": "sqli",
+    " real vulnerability": "true",
+    " cwe": "89",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00455",
+    " category": "sqli",
+    " real vulnerability": "true",
+    " cwe": "89",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00284",
+    " category": "sqli",
+    " real vulnerability": "true",
+    " cwe": "89",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00283",
+    " category": "sqli",
+    " real vulnerability": "true",
+    " cwe": "89",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00192",
+    " category": "sqli",
+    " real vulnerability": "false",
+    " cwe": "89",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest01229",
+    " category": "sqli",
+    " real vulnerability": "false",
+    " cwe": "89",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest01021",
+    " category": "sqli",
+    " real vulnerability": "false",
+    " cwe": "89",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00011",
+    " category": "sqli",
+    " real vulnerability": "false",
+    " cwe": "89",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00285",
+    " category": "sqli",
+    " real vulnerability": "false",
+    " cwe": "89",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00168",
+    " category": "cmdi",
+    " real vulnerability": "true",
+    " cwe": "78",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00899",
+    " category": "cmdi",
+    " real vulnerability": "true",
+    " cwe": "78",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00607",
+    " category": "cmdi",
+    " real vulnerability": "true",
+    " cwe": "78",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00511",
+    " category": "cmdi",
+    " real vulnerability": "true",
+    " cwe": "78",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00431",
+    " category": "cmdi",
+    " real vulnerability": "true",
+    " cwe": "78",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00512",
+    " category": "cmdi",
+    " real vulnerability": "false",
+    " cwe": "78",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00900",
+    " category": "cmdi",
+    " real vulnerability": "false",
+    " cwe": "78",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest01097",
+    " category": "cmdi",
+    " real vulnerability": "false",
+    " cwe": "78",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00736",
+    " category": "cmdi",
+    " real vulnerability": "false",
+    " cwe": "78",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00350",
+    " category": "cmdi",
+    " real vulnerability": "false",
+    " cwe": "78",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00507",
+    " category": "deserialization",
+    " real vulnerability": "true",
+    " cwe": "502",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00898",
+    " category": "deserialization",
+    " real vulnerability": "true",
+    " cwe": "502",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00735",
+    " category": "deserialization",
+    " real vulnerability": "true",
+    " cwe": "502",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00433",
+    " category": "deserialization",
+    " real vulnerability": "true",
+    " cwe": "502",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00269",
+    " category": "deserialization",
+    " real vulnerability": "true",
+    " cwe": "502",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00658",
+    " category": "deserialization",
+    " real vulnerability": "false",
+    " cwe": "502",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00904",
+    " category": "deserialization",
+    " real vulnerability": "false",
+    " cwe": "502",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00435",
+    " category": "deserialization",
+    " real vulnerability": "false",
+    " cwe": "502",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00434",
+    " category": "deserialization",
+    " real vulnerability": "false",
+    " cwe": "502",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00997",
+    " category": "deserialization",
+    " real vulnerability": "false",
+    " cwe": "502",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00161",
+    " category": "codeinj",
+    " real vulnerability": "true",
+    " cwe": "94",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00728",
+    " category": "codeinj",
+    " real vulnerability": "true",
+    " cwe": "94",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00986",
+    " category": "codeinj",
+    " real vulnerability": "true",
+    " cwe": "94",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00503",
+    " category": "codeinj",
+    " real vulnerability": "true",
+    " cwe": "94",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00159",
+    " category": "codeinj",
+    " real vulnerability": "true",
+    " cwe": "94",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest01164",
+    " category": "codeinj",
+    " real vulnerability": "false",
+    " cwe": "94",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00263",
+    " category": "codeinj",
+    " real vulnerability": "false",
+    " cwe": "94",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00892",
+    " category": "codeinj",
+    " real vulnerability": "false",
+    " cwe": "94",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00162",
+    " category": "codeinj",
+    " real vulnerability": "false",
+    " cwe": "94",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  },
+  {
+    "# test name": "BenchmarkTest00602",
+    " category": "codeinj",
+    " real vulnerability": "false",
+    " cwe": "94",
+    " Benchmark version: 0.1": null,
+    " 2026-01-9": null
+  }
+]

@@ -72,6 +72,10 @@ All configurable in `config.yaml`.
 Trias is designed to run on local, consumer-grade AI hardware. Below are
 real-world benchmarks from the machines it's been tested on.
 
+> **OWASP Benchmark validation:** See [benchmarks/owasp](benchmarks/owasp/) for
+> the full security review benchmark — 86.2% precision, 100% recall on the
+> OWASP Benchmark for Python using a single Lenovo ThinkStation PGX.
+
 ### Lenovo ThinkStation PGX (Primary)
 
 | Spec | Detail |

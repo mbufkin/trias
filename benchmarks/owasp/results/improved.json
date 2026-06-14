@@ -1,0 +1,352 @@
+{
+  "BenchmarkTest00180": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**: `values = request.form.getlist(\"BenchmarkTest00180\")` captures unsanitized user input from the HTTP POST form field.\n2. **Assignment & Concatenation**: `param = values[0]` stores the input. It is then concatenated: `string84140 = 'help' + param + 'snapes on a plane'`.\n3. **Slicing/Extraction**: `bar = string84140[4:-17]` slices the string. Since `'help'` has length 4 and `'snapes on a plane'` has length 17, this slicing operation exactly isolates the"
+  },
+  "BenchmarkTest00008": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**: In the `BenchmarkTest00008_post` route, user-controlled data enters via `request.cookies.get(\"BenchmarkTest00008\", \"noCookieValueSupplied\")`.\n2. **Initial Assignment**: The cookie value is URL-decoded and stored in `param`.\n3. **Conditional Routing**: `TestParam` is hardcoded to `\"This should never happen\"`. The condition `if 'should' not in TestParam:` evaluates to `False` because the string contains `'should'`. Execution always falls into the `else"
+  },
+  "BenchmarkTest00618": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "Data-flow trace:\n1. User input enters via HTTP headers: `request.headers.keys()` iterates over incoming header names. One header name is assigned to `param`.\n2. `param` is stored in a `configparser.ConfigParser` object and immediately retrieved back into `bar`. No sanitization, validation, or character filtering occurs during this assignment.\n3. `fileName` is constructed via string interpolation: `f'{helpers.utils.TESTFILES_DIR}/{bar}'`. This directly appends the user-controlled header name to a"
+  },
+  "BenchmarkTest00610": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "Data-flow trace:\n1. **User input entry**: User-controlled data enters via HTTP headers. The loop `for name in request.headers.keys():` iterates over header names provided by the client.\n2. **Flow through assignments**: After filtering out common headers, a non-common header name is assigned to `param` (`param = name; break`).\n3. **Overwrite check**: `bar` is initially hardcoded to `\"This should never happen\"`. The conditional `if 'should' in bar:` evaluates to `True` unconditionally (since the s"
+  },
+  "BenchmarkTest00523": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "Data-Flow Trace:\n1. User input enters via HTTP header: `headers = request.headers.getlist(\"BenchmarkTest00523\")`\n2. The first value from the header is assigned to `param`: `if headers: param = headers[0]`\n3. `param` is directly copied to `bar` without any validation, filtering, or sanitization: `bar = param`\n4. A base directory path is created from a hardcoded/configured constant: `testfiles = pathlib.Path(helpers.utils.TESTFILES_DIR)`\n5. The unsanitized user-controlled `bar` is concatenated to "
+  },
+  "BenchmarkTest00181": {
+    "flagged": false,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "Data-flow trace:\n1. User input enters via `request.form.getlist(\"BenchmarkTest00181\")` and is stored in the `values` list.\n2. If `values` is non-empty, `param = values[0]` assigns the user-controlled string to `param`.\n3. `possible` is hardcoded to `\"ABC\"`, and `guess = possible[1]` evaluates to the fixed character `'B'`.\n4. The `match guess:` statement evaluates the hardcoded `'B'`, routing execution exclusively to `case 'B':`, where `bar = 'bob'`.\n5. The user-controlled value (`param`) is comp"
+  },
+  "BenchmarkTest01111": {
+    "flagged": true,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**: The request enters via Flask's `request` object in the `/benchmark/pathtraver-01/BenchmarkTest01111` route handler.\n2. **Extraction**: `param = scr.get_safe_value(\"BenchmarkTest01111\")` extracts the user-supplied parameter value.\n3. **Conditional Branch Analysis**: The code evaluates `bar = \"This should never happen\" if (7*42) - num > 200 else param`. \n   - Static evaluation: `(7 * 42) - 106 = 294 - 106 = 188`.\n   - Condition `188 > 200` is staticall"
+  },
+  "BenchmarkTest00170": {
+    "flagged": false,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "Data-flow trace:\n1. User input enters via `request.form.getlist(\"BenchmarkTest00170\")` and is assigned to `param`.\n2. `param` is written into a `ConfigParser` object under the key `'keyB-64047'`.\n3. The variable `bar` is then assigned by calling `conf64047.get('section64047', 'keyA-64047')`. This key was explicitly hardcoded to `'a_Value'` two lines earlier.\n4. As a result, `bar` contains only the hardcoded string `'a_Value'`. The user-controlled `param` is stored in the config but never retriev"
+  },
+  "BenchmarkTest01012": {
+    "flagged": false,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**: `request.path` is split by `/`, and `param = parts[1]` extracts the second segment of the URL path. This value is user-controlled.\n2. **Initial Assignment**: `param` is stored in a dictionary: `map72463['keyB-72463'] = param`.\n3. **Variable Reassignment**: \n   - `bar = \"safe!\"` (hardcoded)\n   - `bar = map72463['keyB-72463']` (temporarily holds user input)\n   - `bar = map72463['keyA-72463']` (**overwritten** with the hardcoded string `'a-Value'`)\n4. *"
+  },
+  "BenchmarkTest00908": {
+    "flagged": true,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "Data-flow trace:\n1. User input enters via `request.query_string.decode('utf-8')`.\n2. The code locates and extracts the value for the parameter `BenchmarkTest00908` from the query string, storing it in `param` after URL decoding (`urllib.parse.unquote_plus`).\n3. If `param` is not empty, it is appended to a list and assigned to `bar`, effectively making `bar` contain the raw, user-controlled input.\n4. `bar` is directly concatenated with the base directory `helpers.utils.TESTFILES_DIR` to form a fi"
+  },
+  "BenchmarkTest00099": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Data-Flow Trace:\n1. User input enters the application via `param = request.form.get(\"BenchmarkTest00099\")` from an HTTP POST request.\n2. The code checks if `param` is falsy and sets it to `\"\"` if so, but otherwise leaves the raw user-supplied value intact.\n3. `param` is passed to `conf52528.set()` and immediately retrieved back into `bar` via `conf52528.get()`. This ConfigParser usage acts as a pass-through, preserving the exact unsanitized input.\n4. The variable `bar` is interpolated directly i"
+  },
+  "BenchmarkTest00454": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Data-flow trace:\n1. **Input Entry**: `param = request.headers.get(\"BenchmarkTest00454\")` captures a user-controlled HTTP header value.\n2. **Transformation**: The value undergoes a base64 encode/decode round-trip (`tmp = base64.b64encode(param.encode('utf-8'))` followed by `bar = base64.b64decode(tmp).decode('utf-8')`). This process preserves the original input exactly and does not sanitize, escape, or validate special characters.\n3. **SQL Construction**: The unsanitized `bar` variable is directl"
+  },
+  "BenchmarkTest00455": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Data-flow trace:\n1. **User Input Entry**: `param = request.headers.get(\"BenchmarkTest00455\")` captures a value directly from the HTTP headers, making it user-controlled.\n2. **Flow Through Variables**: `param` is assigned to `map61311['keyB-61311']`, then retrieved into `bar = map61311['keyB-61311']`. The variable `bar` now holds the unsanitized user input.\n3. **Overwritten/Sanitized Check**: There are no reassignments, type coercions, or sanitization functions applied to `param` or `bar` before "
+  },
+  "BenchmarkTest00284": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Data-flow trace:\n1. User input enters the application via `wrapped.get_form_parameter(\"BenchmarkTest00284\")` and is assigned to the variable `param`.\n2. The variable `bar` is initialized with the hardcoded string `\"This should never happen\"`.\n3. The conditional check `if 'should' in bar:` evaluates to `True` because the literal string contains \"should\". This causes the branch to execute, unconditionally overwriting `bar` with `param`, which holds the unsanitized user input.\n4. The value of `bar`"
+  },
+  "BenchmarkTest00283": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "1. **Identify User Input Entry:** User-controlled data enters via the POST request form parameter `\"BenchmarkTest00283\"`, captured by `param = wrapped.get_form_parameter(\"BenchmarkTest00283\")`.\n2. **Trace Data Flow:** The raw value is stored in a dictionary (`map8812['keyB-8812']`) and immediately assigned to `bar = map8812['keyB-8812']`.\n3. **Check for Overwrites/Conditionals:** No conditional branches or reassignments modify `bar` before use. It retains the exact user-supplied string.\n4. **Ide"
+  },
+  "BenchmarkTest00192": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Data-flow trace:\n1. User input enters via `request.form.getlist(\"BenchmarkTest00192\")` and is assigned to `param`.\n2. `possible` is hardcoded to `\"ABC\"`, so `guess = possible[1]` statically evaluates to `'B'`.\n3. The `match guess:` statement routes execution to `case 'B':`, which assigns the hardcoded string `'bob'` to `bar`. User input (`param`) is completely bypassed and overwritten before any database interaction.\n4. The SQL query is built as a hardcoded string containing a parameterized plac"
+  },
+  "BenchmarkTest01229": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Data-Flow Trace:\n1. User input enters via Flask's `request` object in the POST route `/benchmark/sqli-00/BenchmarkTest01229`.\n2. The request is wrapped by `helpers.separate_request.request_wrapper(request)` and extracted via `scr.get_safe_value(\"BenchmarkTest01229\")`, assigning the retrieved value to `param`.\n3. The SQL query string `sql` is assigned: `f'SELECT username from USERS where password = ?'`. The f-string prefix is functionally inert here since there are no embedded variables, and it c"
+  },
+  "BenchmarkTest01021": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**: User-controlled data enters via `request.path` in the `BenchmarkTest01021_post()` route.\n2. **Extraction & Assignment**: \n   - `parts = request.path.split(\"/\")` splits the URL path.\n   - `param = parts[1]` extracts the second segment of the path, making it user-controlled.\n3. **Variable Transformation**:\n   - `bar` is initially hardcoded to `\"alsosafe\"`.\n   - Inside the `if param:` block, `param` is appended to a list, the first element is popped, an"
+  },
+  "BenchmarkTest00011": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry:** In `BenchmarkTest00011_post()`, user-controlled data enters via `request.cookies.get(\"BenchmarkTest00011\", \"noCookieValueSupplied\")`.\n2. **Initial Assignment:** The cookie value is URL-decoded and assigned to `param`.\n3. **Conditional Overwrite/Assignment:** `bar` is initially hardcoded to `\"This should never happen\"`. The condition `if 'should' in bar:` evaluates to `True`, so `bar` is overwritten with the user-controlled `param`.\n4. **SQL Construct"
+  },
+  "BenchmarkTest00285": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "### Data-Flow Trace\n\n1. **Input Entry:** User-controlled data enters the application via `wrapped.get_form_parameter(\"BenchmarkTest00285\")`, which extracts a value from the HTTP request form/data. This value is assigned to `param`.\n2. **Intermediate Processing:** `param` is temporarily stored in a `configparser.ConfigParser` object and immediately retrieved back into the variable `bar`. At this point, `bar` holds the unsanitized user input.\n3. **SQL String Construction:** The SQL query string is"
+  },
+  "BenchmarkTest00168": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "Data-flow trace:\n1. **Input Entry**: User-controlled data enters via `request.form.get(\"BenchmarkTest00168\")` and is assigned to `param`. If the form field is missing, it defaults to `\"\"`.\n2. **Flow & Branches**: The code hardcodes `possible = \"ABC\"` and `guess = possible[0]`, so `guess` is always `'A'`. The `match guess:` block therefore deterministically executes `case 'A': bar = param`. No conditional branch overwrites or sanitizes the value before it reaches `bar`.\n3. **String Construction**"
+  },
+  "BenchmarkTest00899": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Data-Flow Trace\n\n1. **Input Entry**: User-controlled data enters via `wrapped.get_query_parameter(\"BenchmarkTest00899\")` and is assigned to `param`. If missing, it defaults to `\"\"`.\n2. **Branch Analysis**: `possible = \"ABC\"` and `guess = possible[0]` hardcode `guess` to `'A'`. The `match guess:` block therefore always executes `case 'A':`, assigning `bar = param`. No other branches are reachable, so `bar` is never overwritten by a safe hardcoded string.\n3. **Sink Construction**: `argList` is"
+  },
+  "BenchmarkTest00607": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry:** `headers = request.headers.getlist(\"BenchmarkTest00607\")` retrieves a custom HTTP header value directly from the client request. This is user-controlled input.\n2. **Assignment to Variable:** `if headers: param = headers[0]` assigns the first header value to `param`.\n3. **String Manipulation:** \n   - `string50110 = 'help'`\n   - `string50110 += param` \u2192 `'help' + user_input`\n   - `string50110 += 'snapes on a plane'` \u2192 `'help' + user_input + 'snapes on "
+  },
+  "BenchmarkTest00511": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Data-Flow Trace\n\n1. **Input Source**: `param = request.headers.get(\"BenchmarkTest00511\")` captures raw, user-controlled data from an HTTP header. If missing, it defaults to `\"\"`.\n2. **Data Transformation**: The code builds a list: `['safe', param, 'moresafe']`, then calls `lst.pop(0)` which removes the hardcoded `'safe'` string. This leaves `[param, 'moresafe']`.\n3. **Assignment**: `bar = lst[0]` assigns the raw user input directly to `bar`. No sanitization, escaping, or overwriting occurs a"
+  },
+  "BenchmarkTest00431": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "Data-flow trace:\n1. User input enters via `request.form.keys()`, which retrieves user-supplied form field names.\n2. The loop iterates through these keys, and when a key contains \"BenchmarkTest00431\", it assigns that key name to `param`.\n3. `param` is directly assigned to `bar` without any modification or sanitization.\n4. `bar` is interpolated into `argStr` via an f-string: `argStr += f\"echo {bar}\"`.\n5. `argStr` is passed directly to `subprocess.run(argStr, shell=True, ...)`.\n6. Because `shell=Tr"
+  },
+  "BenchmarkTest00512": {
+    "flagged": false,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "Data-flow trace:\n1. User input enters via `request.headers.get(\"BenchmarkTest00512\")` and is assigned to `param`.\n2. `param` is stored in a ConfigParser under `'keyB-41882'`, but this key is never read back for command execution.\n3. The variable `bar` is initially set to `'safe!'`, then explicitly overwritten by `conf41882.get('section41882', 'keyA-41882')`, which retrieves the hardcoded string `'a_Value'`.\n4. `argStr` is constructed using `f\"echo {bar}\"`, meaning it only contains the hardcoded "
+  },
+  "BenchmarkTest00900": {
+    "flagged": false,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Data-Flow Trace\n\n1. **Input Entry**: User-controlled input enters via `wrapped.get_query_parameter(\"BenchmarkTest00900\")` and is assigned to the variable `param`. If missing, it defaults to `\"\"`.\n2. **Config Storage**: `param` is written into a `ConfigParser` object under the key `'keyB-10363'`: `conf10363.set('section10363', 'keyB-10363', param)`.\n3. **Variable Overwrite**: The variable `bar` is initially assigned `'safe!'`, but is immediately overwritten by `conf10363.get('section10363', '"
+  },
+  "BenchmarkTest01097": {
+    "flagged": false,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "Data-Flow Trace:\n1. User input enters via `request.path` in the Flask route handler.\n2. The path is split by `/`, and `param = parts[1]` extracts a segment of the URL path.\n3. `num` is hardcoded to `86`.\n4. The condition `if 7 * 42 - num > 200:` evaluates statically: `7 * 42 = 294`, `294 - 86 = 208`, and `208 > 200` is always `True`.\n5. Because the condition is statically true, the `if` branch executes, setting `bar = 'This_should_always_happen'`. The `else` branch (`bar = param`) is dead code a"
+  },
+  "BenchmarkTest00736": {
+    "flagged": false,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "Data-flow trace:\n1. **Input Entry**: User-controlled data enters via `param = request.args.get(\"BenchmarkTest00736\")`.\n2. **Initial Assignment**: `param` is stored in the dictionary as `map81232['keyB-81232']`.\n3. **Variable Flow**: `bar` is assigned `map81232['keyB-81232']`, temporarily holding the unsanitized user input.\n4. **Overwrite Check**: On the very next line, `bar = map81232['keyA-81232']` overwrites `bar` with the hardcoded string `'a-Value'`. The user-controlled value is completely d"
+  },
+  "BenchmarkTest00350": {
+    "flagged": false,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Data-Flow Trace\n\n1. **Input Entry**: User-controlled data enters via `wrapped.get_form_parameter(\"BenchmarkTest00350\")` and is assigned to `param`.\n2. **Intermediate Storage**: `param` is stored in a dictionary: `map11630['keyB-11630'] = param`.\n3. **Temporary Assignment**: `bar` is assigned from the dictionary: `bar = map11630['keyB-11630']`. At this point, `bar` holds the unsanitized user input.\n4. **Critical Overwrite**: In the very next line, `bar` is explicitly overwritten with a hardco"
+  },
+  "BenchmarkTest00507": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**: `param = request.headers.get(\"BenchmarkTest00507\")` captures user-controlled data from an HTTP header. If the header is absent or empty, it defaults to `\"\"`, but any provided value remains unsanitized.\n2. **Value Flow & Assignments**: `possible = \"ABC\"` and `guess = possible[0]` hardcode `guess` to `'A'`. The `match guess:` statement therefore always evaluates the `case 'A':` branch, which executes `bar = param`. This directly assigns the raw HTTP he"
+  },
+  "BenchmarkTest00898": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Data-flow trace:\n1. User input enters via `wrapped.get_query_parameter(\"BenchmarkTest00898\")` and is stored in `param`.\n2. `bar` is initialized to the hardcoded string `\"This should never happen\"`.\n3. The condition `if 'should' in bar:` evaluates to `True` unconditionally because the hardcoded string literally contains \"should\". This forces the execution of `bar = param`, overwriting the safe default with user-controlled input.\n4. `bar` is passed through `base64.urlsafe_b64decode()` and directly"
+  },
+  "BenchmarkTest00735": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Data-Flow Trace:\n1. User input enters via `request.args.get(\"BenchmarkTest00735\")` and is assigned to `param`. If missing, it defaults to an empty string.\n2. `param` is passed to `markupsafe.escape(param)`, which applies HTML entity escaping. This only affects characters like `<`, `>`, `&`, `\"`, `'` and has no effect on base64-safe characters (A-Z, a-z, 0-9, +, /, =). The result is stored in `bar`.\n3. `bar` is passed to `base64.urlsafe_b64decode()`, which decodes the user-controlled string back "
+  },
+  "BenchmarkTest00433": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Data-Flow Trace\n\n1. **Input Entry Point**: User-controlled data enters the application via `request.form` (HTTP POST body parameters).\n2. **Key Extraction Loop**: The code iterates over `request.form.keys()`. For each key (`name`), it checks if the value `\"BenchmarkTest00433\"` exists in `request.form.getlist(name)`. If matched, `param = name` assigns the **form field key** to `param`. Since HTTP POST requests allow attackers to define arbitrary parameter names, `param` is fully user-controll"
+  },
+  "BenchmarkTest00269": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Data-Flow Trace\n\n1. **Input Entry Point**: User-controlled data enters the application via `request.form.getlist(\"BenchmarkTest00269\")` on the POST route `/benchmark/deserialization-00/BenchmarkTest00269`.\n2. **Initial Assignment**: The first element of the submitted list is extracted: `param = values[0]`.\n3. **Intermediate Processing**: `param` is passed to `thing.doSomething(param)`, and the result is assigned to `bar`. In standard benchmark patterns, this helper method acts as a pass-thro"
+  },
+  "BenchmarkTest00658": {
+    "flagged": false,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Data-Flow Trace\n\n1. **Input Entry**: User-controlled data enters via HTTP request headers (`request.headers.keys()` and `request.headers.get_all(name)`).\n2. **Initial Assignment**: The code iterates through header names, skips common ones, and assigns a non-common header name to `param`.\n3. **Dictionary Storage**: `param` is stored in the dictionary: `map88474['keyB-88474'] = param`.\n4. **Variable Initialization & Overwrite Chain**:\n   - `bar = \"safe!\"` (hardcoded)\n   - `bar = map88474['keyB"
+  },
+  "BenchmarkTest00904": {
+    "flagged": false,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Data-flow trace:\n1. User input enters via the HTTP request query parameter `BenchmarkTest00904`.\n2. The value is extracted using `wrapped.get_query_parameter(\"BenchmarkTest00904\")` and assigned to `param`.\n3. If `param` is truthy, it is split by whitespace and the first segment is assigned to `bar`.\n4. `bar` (containing user-controlled data) is passed directly to `yaml.safe_load(bar)`.\n5. The deserialization sink uses `yaml.safe_load()`, which is explicitly listed as a safe pattern in the guidel"
+  },
+  "BenchmarkTest00435": {
+    "flagged": false,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Data-flow trace:\n1. User input enters via `request.form` (HTTP POST parameters).\n2. The code iterates over `request.form.keys()` and assigns a form key name to `param`.\n3. If `param` is truthy, it extracts the first whitespace-delimited token into `bar` using `param.split(' ')[0]`.\n4. `bar` is passed directly to `yaml.safe_load(bar)`.\n5. `yaml.safe_load()` is explicitly a safe deserialization method that only parses YAML into standard Python data structures without executing arbitrary code or in"
+  },
+  "BenchmarkTest00434": {
+    "flagged": false,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Data-flow trace:\n1. User input enters via `request.form` in the POST request.\n2. The code iterates over form keys and assigns a matching key name to `param`.\n3. `param` is passed to `thing.doSomething(param)`, which returns `bar`.\n4. `bar` is passed directly to `yaml.safe_load(bar)`.\n5. `yaml.safe_load()` is explicitly a safe deserialization method that parses YAML into basic Python data types (dicts, lists, strings, etc.) without instantiating arbitrary objects or executing code. It does not po"
+  },
+  "BenchmarkTest00997": {
+    "flagged": false,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Data-flow trace:\n1. User input enters via `request.query_string.decode('utf-8')` and is extracted into the variable `param`.\n2. `param` is URL-decoded using `urllib.parse.unquote_plus(param)`, remaining user-controlled.\n3. A conditional branch evaluates `if 7 * 42 - num > 200:` where `num` is hardcoded to `86`. This simplifies to `if 208 > 200:`, which always evaluates to True at runtime.\n4. Because the condition is always True, `bar` is assigned the hardcoded string `'This_should_always_happen'"
+  },
+  "BenchmarkTest00161": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "### Data-Flow Trace\n\n1. **Identify Input Source:** User-controlled input enters via `param = request.form.get(\"BenchmarkTest00161\")`, which reads a value from the HTTP POST form data.\n2. **Trace Flow Through Assignments:** The variable `param` is immediately used in a ternary assignment: `bar = \"This should never happen\" if (7*42) - num > 200 else param`.\n3. **Check Conditional Branches & Overwrites:** Evaluate the condition `(7 * 42) - num > 200`. Since `num` is hardcoded to `106`, this becomes"
+  },
+  "BenchmarkTest00728": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Data-Flow Trace:\n1. User input enters via `param = request.args.get(\"BenchmarkTest00728\")`, allowing an attacker to control the value of the query parameter `BenchmarkTest00728`.\n2. `possible` is hardcoded to `\"ABC\"`, and `guess` is assigned `possible[0]`, making `guess` deterministically equal to `'A'`.\n3. The `match guess:` statement evaluates to `case 'A':`, which executes `bar = param`. Therefore, `bar` directly receives the unsanitized user input.\n4. `bar` is passed directly to `eval(bar)` "
+  },
+  "BenchmarkTest00986": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Data-Flow Trace:\n1. User input enters via `request.query_string.decode('utf-8')`, capturing the raw HTTP query string.\n2. The code searches for `\"BenchmarkTest00986=\"` in the query string and extracts the substring after it into `param`. This value is entirely user-controlled.\n3. `param` is URL-decoded via `urllib.parse.unquote_plus(param)`, preserving all user-provided characters.\n4. Inside the `if param:` conditional, `param` is appended to a list `lst`. The list manipulation (`lst.append('saf"
+  },
+  "BenchmarkTest00503": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Data-flow trace:\n1. User input enters via `request.headers.get(\"BenchmarkTest00503\")`, storing the HTTP header value in `param`.\n2. `param` is base64-encoded (`tmp = base64.b64encode(...)`) and immediately decoded back into `bar` (`bar = base64.b64decode(tmp).decode('utf-8')`). This round-trip transformation is content-preserving, so `bar` remains exactly equal to the user-controlled header value.\n3. `bar` is passed directly as an argument to `eval(bar)` inside a try-except block.\n4. No input va"
+  },
+  "BenchmarkTest00159": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "### Data-Flow Trace\n\n1. **Input Entry**: User-controlled data enters via `request.form.get(\"BenchmarkTest00159\")` and is assigned to `param`.\n2. **Initial Assignment**: If `param` is falsy, it's set to `\"\"`. If truthy, the code proceeds into the `if param:` block.\n3. **List Manipulation**: \n   - A list `lst` is created.\n   - `'safe'`, `param`, and `'moresafe'` are appended sequentially.\n   - `lst.pop(0)` removes the first element (`'safe'`).\n   - `bar = lst[0]` assigns the new first element (whi"
+  },
+  "BenchmarkTest01164": {
+    "flagged": true,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Data-flow trace:\n1. **Input Source**: User-controlled data enters via Flask `request` (GET/POST) to the `/benchmark/codeinj-00/BenchmarkTest01164` route.\n2. **Flow & Assignments**: The value is extracted using `scr.get_safe_value(\"BenchmarkTest01164\")` and assigned to `param`. Despite the function name, no sanitization or validation logic is visible in this snippet, so it passes through raw user input.\n3. **Overwrite Check**: `TestParam` is hardcoded to `\"This should never happen\"`, but it does "
+  },
+  "BenchmarkTest00263": {
+    "flagged": false,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "### Data-Flow Trace\n\n1. **Input Entry**: User-controlled data enters via `request.form.getlist(\"BenchmarkTest00263\")` and is stored in `values`. If present, `param = values[0]` assigns this input to `param`.\n2. **Branch Condition Analysis**: `possible` is hardcoded to `\"ABC\"`. Consequently, `guess = possible[1]` evaluates to the hardcoded string `'B'`. There is no user input or dynamic variable influencing `guess`.\n3. **Control Flow Routing**: The `match guess:` statement evaluates against the h"
+  },
+  "BenchmarkTest00892": {
+    "flagged": true,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Data-Flow Trace:\n1. User input enters via `wrapped.get_query_parameter(\"BenchmarkTest00892\")` and is stored in `param`.\n2. `TestParam` is hardcoded to `\"This should never happen\"`. The condition `'should' not in TestParam` evaluates to False, so the code executes the `else` branch: `bar = param`. Thus, `bar` directly contains the raw user-controlled input.\n3. A validation check ensures `bar` starts and ends with single quotes and contains no internal single quotes. If this fails, the function re"
+  },
+  "BenchmarkTest00162": {
+    "flagged": false,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "### Data-Flow Trace\n\n1. **Input Entry**: User-controlled data enters via `request.form.get(\"BenchmarkTest00162\")` and is stored in the variable `param`. If missing, it defaults to `\"\"`.\n2. **Variable Assignment & Routing**: `possible` is hardcoded to `\"ABC\"`, so `guess = possible[1]` strictly evaluates to the hardcoded string `'B'`. The `match guess:` statement therefore routes execution exclusively to `case 'B':`.\n3. **Overwrite/Neutralization**: Inside `case 'B':`, `bar` is assigned the hardco"
+  },
+  "BenchmarkTest00602": {
+    "flagged": false,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Data-flow trace:\n1. User input enters via `request.headers.getlist(\"BenchmarkTest00602\")` and is assigned to the variable `param`.\n2. `param` is stored in a `configparser.ConfigParser` object under the key `'keyB-75466'`.\n3. The variable `bar` is explicitly assigned by retrieving the value for key `'keyA-75466'` from the config: `bar = conf75466.get('section75466', 'keyA-75466')`.\n4. This retrieval fetches the hardcoded string `'a_Value'`, which completely overwrites any previous value assigned "
+  }
+}
