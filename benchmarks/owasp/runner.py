@@ -101,7 +101,7 @@ First, write your data-flow trace. Then output your verdict on the LAST line, ex
 VULNERABLE: YES (if user input reaches a dangerous sink without sanitization)
 VULNERABLE: NO (if user input does NOT reach a dangerous sink, OR if proper sanitization is present)"""
 
-def run_baseline(cases):
+def run_baseline(cases, model="qwen3.6:35b-a3b"):
     """Zero-shot: simple prompt, one pass."""
     results = {}
     prompt = """Review this Python code for security vulnerabilities.
@@ -123,7 +123,7 @@ List what you find before the verdict line."""
             code = f.read()
         
         payload = {
-            "model": "qwen3.6:35b-a3b",
+            "model": model,
             "messages": [
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": f"Review this code:\n\n```python\n{code}\n```"}
@@ -155,7 +155,7 @@ List what you find before the verdict line."""
     
     return results
 
-def run_improved(cases):
+def run_improved(cases, model="qwen3.6:35b-a3b"):
     """Improved: category-specific prompt with data-flow trace requirement."""
     results = {}
     
@@ -172,7 +172,7 @@ def run_improved(cases):
         sys_prompt = build_improved_prompt(category)
         
         payload = {
-            "model": "qwen3.6:35b-a3b",
+            "model": model,
             "messages": [
                 {"role": "system", "content": sys_prompt},
                 {"role": "user", "content": f"Analyze this code for {CATEGORY_CONTEXT[category]['name']}:\n\n```python\n{code}\n```"}
@@ -222,20 +222,38 @@ def score(results):
     }
 
 if __name__ == "__main__":
-    mode = sys.argv[1] if len(sys.argv) > 1 else "baseline"
+    args = sys.argv[1:]
+    mode = "baseline"
+    model = "qwen3.6:35b-a3b"
+    
+    i = 0
+    while i < len(args):
+        if args[i] in ("--model", "-m") and i + 1 < len(args):
+            model = args[i + 1]
+            i += 2
+        elif args[i] in ("baseline", "improved"):
+            mode = args[i]
+            i += 1
+        else:
+            print(f"Unknown arg: {args[i]}")
+            print("Usage: python3 runner.py [baseline|improved] [--model MODEL]")
+            sys.exit(1)
+    
+    model_slug = model.replace(":", "-").replace("/", "-")
+    
     cases = load_cases()
     
     print(f"Running {mode} on {len(cases)} test cases...")
-    print(f"Model: qwen3.6:35b-a3b on {LENOVO}")
+    print(f"Model: {model} on {LENOVO}")
     print()
     
     if mode == "improved":
-        results = run_improved(cases)
+        results = run_improved(cases, model=model)
     else:
-        results = run_baseline(cases)
+        results = run_baseline(cases, model=model)
     
-    # Save
-    out_path = f"{BASE}/{mode}-results.json"
+    # Save with model-specific filename
+    out_path = f"{BASE}/{mode}-{model_slug}-results.json"
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2)
     
