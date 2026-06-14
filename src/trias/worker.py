@@ -334,9 +334,22 @@ def check_model_health(config: dict, model: str, timeout: int = 30,
 
 
 def validate_council(config: dict) -> list[dict]:
-    """Check all council models are healthy. Returns list of healthy reviewers."""
+    """Check all council models are healthy. Mode-aware: checks focused_roles
+    when review.mode == 'focused', otherwise checks the council list.
+    Returns list of healthy reviewers."""
+    mode = config.get("review", {}).get("mode", "council")
+
+    if mode == "focused":
+        roles = config.get("focused_roles", {})
+        candidates = [
+            {"model": rc["model"], "label": rc["label"]}
+            for rc in roles.values()
+        ]
+    else:
+        candidates = config.get("council", [])
+
     healthy = []
-    for reviewer in config.get("council", []):
+    for reviewer in candidates:
         model = reviewer["model"]
         label = reviewer.get("label", model)
         if check_model_health(config, model):
@@ -391,6 +404,59 @@ _ARCH_GLOSSARY = (
 )
 
 
+def build_focused_prompt(role_config: dict, principles_registry: dict,
+                         code: str, round_n: int, total: int) -> str:
+    """Build a role-specific review prompt from principles.
+
+    Each principle in the role's principles list is resolved from the
+    principles registry and injected into the prompt. Principles are
+    independently reviewable and updatable in config.yaml.
+    """
+    principle_names = role_config.get("principles", [])
+    label = role_config.get("label", "Reviewer")
+
+    # Resolve principles from registry
+    resolved = []
+    for name in principle_names:
+        p = principles_registry.get(name, {})
+        if p:
+            resolved.append(f"### {p.get('name', name)}\n{p.get('prompt', '').strip()}")
+        else:
+            resolved.append(f"### {name}\n[principle not found in registry]")
+
+    principles_text = "\n\n".join(resolved) if resolved else "(no principles configured)"
+
+    prompt = (
+        f"Code review — Round {round_n} of {total}. "
+        f"You are the **{label}**. Review ONLY through this lens.\n\n"
+        f"CODE:\n{code}\n\n"
+        f"=== YOUR PRINCIPLES ===\n\n"
+        f"{principles_text}\n\n"
+        f"=== OUTPUT FORMAT ===\n"
+        f"For each finding: severity (HIGH/MEDIUM/LOW), file:line, principle, description.\n"
+        f"Be specific and critical. Do not praise — find problems.\n"
+        f"Stay within your role. If you notice issues outside your domain, "
+        f"trust that another reviewer will catch them."
+    )
+    return prompt
+
+def build_council_prompt(code: str, focus: str, round_n: int, total: int) -> str:
+    """Build the general council review prompt (backward compatible)."""
+    prompt = (
+        f"Code review — Round {round_n} of {total}. Review this code thoroughly.\n\n"
+        + _ARCH_GLOSSARY
+        + f"CODE:\n{code}\n\n"
+        + f"Focus on: {focus}.\n"
+        + "For each finding: severity (HIGH/MEDIUM/LOW), file:line, category, description.\n"
+        + "IMPORTANT: For any HIGH severity finding, you MUST include a concrete exploit chain "
+        + "(specific input → code path → harm). If you cannot construct one, it is NOT HIGH.\n"
+        + "Pattern matching is not enough — verify against the actual execution model.\n"
+        + "Flag shallow modules that could be deepened. Identify seams that could be better defined.\n"
+        + "Be specific and critical. Be concise. Do not praise — find problems."
+    )
+    return prompt
+
+
 def process_task(config: dict, task_path: Path) -> bool:
     """Process a single review task. Returns True on success."""
     task_id = task_path.stem
@@ -425,12 +491,29 @@ def process_task(config: dict, task_path: Path) -> bool:
     # === RUN COUNCIL ===
     reviews = []
     prev_model = None
+    rev_mode = rev_config.get("mode", "council")
 
-    for i, reviewer in enumerate(council):
+    # Build reviewer list based on mode
+    if rev_mode == "focused":
+        focused_roles = config.get("focused_roles", {})
+        principles_registry = config.get("principles", {})
+        reviewers = [
+            {"model": rc["model"], "label": rc["label"],
+             "role_config": rc, "is_focused": True}
+            for rc in focused_roles.values()
+        ]
+    else:
+        reviewers = [
+            {"model": r["model"], "label": r.get("label", r["model"]),
+             "role_config": None, "is_focused": False}
+            for r in council
+        ]
+
+    for i, reviewer in enumerate(reviewers):
         model = reviewer["model"]
-        label = reviewer.get("label", model)
+        label = reviewer["label"]
         n = i + 1
-        total = len(council)
+        total = len(reviewers)
 
         if prev_model:
             ollama_unload(config, prev_model)
@@ -439,18 +522,11 @@ def process_task(config: dict, task_path: Path) -> bool:
         write_status(config, task_id, "reviewing", round=n, total=total,
                      model=model, label=label)
 
-        prompt = (
-            f"Code review — Round {n} of {total}. Review this code thoroughly.\n\n"
-            + _ARCH_GLOSSARY
-            + f"CODE:\n{code}\n\n"
-            + f"Focus on: {focus}.\n"
-            + "For each finding: severity (HIGH/MEDIUM/LOW), file:line, category, description.\n"
-            + "IMPORTANT: For any HIGH severity finding, you MUST include a concrete exploit chain "
-            + "(specific input → code path → harm). If you cannot construct one, it is NOT HIGH.\n"
-            + "Pattern matching is not enough — verify against the actual execution model.\n"
-            + "Flag shallow modules that could be deepened. Identify seams that could be better defined.\n"
-            + "Be specific and critical. Be concise. Do not praise — find problems."
-        )
+        if reviewer["is_focused"]:
+            prompt = build_focused_prompt(
+                reviewer["role_config"], principles_registry, code, n, total)
+        else:
+            prompt = build_council_prompt(code, focus, n, total)
 
         try:
             t0 = time.time()
@@ -547,13 +623,15 @@ def process_task(config: dict, task_path: Path) -> bool:
     failed = len(reviews) - succeeded
 
     ok_icon = "⚠️" if failed else "✅"
+    mode_label = "Focused Review" if rev_mode == "focused" else "Council"
     report = f"""# Code Review — {task_id}
 
 **Files:** {', '.join(files)}
+**Mode:** {mode_label}
 **Focus:** {focus}
 **Date:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}
 
-## Council ({succeeded}/{len(reviews)} reviewers succeeded, {ok_icon}{' ' + str(failed) + ' failed' if failed else ''} all clear)
+## {mode_label} ({succeeded}/{len(reviewers)} reviewers succeeded, {ok_icon}{' ' + str(failed) + ' failed' if failed else ''} all clear)
 
 ### Reviewers
 """
@@ -563,7 +641,7 @@ def process_task(config: dict, task_path: Path) -> bool:
         report += f"- {icon} **{r['label']}** — `{r['model']}` — {r['elapsed_s']}s, {r['chars']} chars\n"
 
     report += f"\n---\n\n## Synthesis ({synth_elapsed:.0f}s)\n\n{synthesis}\n"
-    report += f"\n---\n\n*Total: {total_time:.0f}s | Council: {succeeded}/{len(reviews)} | Synthesis: {syn_config['model']}*"
+    report += f"\n---\n\n*Total: {total_time:.0f}s | {mode_label}: {succeeded}/{len(reviewers)} | Synthesis: {syn_config['model']}*"
 
     report += "\n\n---\n\n## Raw Reviews (full text)\n\n"
     for r in reviews:

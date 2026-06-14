@@ -42,12 +42,31 @@ _DEFAULT_CONFIG: dict[str, Any] = {
         "temperature": 0.3,
     },
     "review": {
+        "mode": "council",
         "max_file_chars": 5000,
         "num_predict": 1536,
         "temperature": 0.3,
         "poll_interval": 15,
         "focus": "security, correctness, deep vs shallow modules, seams & interfaces, locality, leverage, maintainability",
     },
+    "focused_roles": {
+        "security": {
+            "model": "qwen3-coder-next:q4_K_M",
+            "label": "Security Reviewer",
+            "principles": ["data_flow_trace", "exploit_chain", "sink_classification", "input_verification"],
+        },
+        "architecture": {
+            "model": "qwen2.5-coder:32b",
+            "label": "Architecture Reviewer",
+            "principles": ["deep_vs_shallow", "seams_and_interfaces", "locality", "leverage"],
+        },
+        "correctness": {
+            "model": "qwen2.5-coder-opencode:latest",
+            "label": "Correctness + Patterns Reviewer",
+            "principles": ["logic_errors", "edge_cases", "refactoring_opportunities", "test_gaps"],
+        },
+    },
+    "principles": {}
 }
 
 

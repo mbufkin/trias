@@ -1,6 +1,8 @@
 # OWASP Benchmark — LLM Security Review Validation
 
-**Trias is the product. This is how we know it works.**
+**Trias is a multi-model code review engine. This benchmark validates its Security Reviewer role.**
+
+Trias has three focused roles — Security, Architecture, and Correctness — each with independently reviewable principles. The OWASP Benchmark for Python validates the Security role's performance: data-flow tracing, exploit chain construction, sink classification, and input verification.
 
 We benchmarked our single-model reviewer (qwen3.6:35b-a3b) against the [OWASP Benchmark for Python](https://github.com/OWASP-Benchmark/BenchmarkPython) — 50 hand-crafted test cases across five vulnerability categories. Each case is either genuinely vulnerable or safely written to look dangerous. The benchmark measures whether an LLM can tell the difference.
 
