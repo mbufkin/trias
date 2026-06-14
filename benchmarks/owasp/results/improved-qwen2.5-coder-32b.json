@@ -1,0 +1,352 @@
+{
+  "BenchmarkTest00180": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.form.getlist(\"BenchmarkTest00180\")`.\n   - This retrieves a list of values associated with the form parameter \"BenchmarkTest00180\".\n\n2. **Assignment to `param`**:\n   - If `values` is not empty, `param` is assigned the first element of `values`, i.e., `param = values[0]`.\n\n3. **String Manipulation**:\n   - `string84140` is initialized with the string `'help'`.\n   - `param` is concatenated to `string84140`, resulti"
+  },
+  "BenchmarkTest00008": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - The user input enters through the cookie named `BenchmarkTest00008` in the `BenchmarkTest00008_post` function.\n   - `param = urllib.parse.unquote_plus(request.cookies.get(\"BenchmarkTest00008\", \"noCookieValueSupplied\"))`\n\n2. **Flow of User Input**:\n   - The value from the cookie is stored in the variable `param`.\n   - There is a conditional check: \n     ```python\n     if 'should' not in TestParam:\n         bar = \"Ifnot case passed\"\n     else:\n   "
+  },
+  "BenchmarkTest00618": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Data-flow Trace\n\n1. **User Input Entry**:\n   - User input enters through the HTTP headers (`request.headers`).\n   - The code iterates over all header names and checks if they are in `helpers.utils.commonHeaderNames`. If not, it assigns the first such header name to `param`.\n\n2. **Flow of `param`**:\n   - `param` is assigned a header name that is not in `commonHeaderNames`.\n   - This value is then stored in a configuration parser under the key `'keyB-42704'` in the section `'section42704'`.\n\n3"
+  },
+  "BenchmarkTest00610": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through the HTTP headers (`request.headers`).\n\n2. **Assignment to `param`**:\n   - The code iterates over all header names.\n   - If a header name is not in `helpers.utils.commonHeaderNames`, it assigns that header name to `param`.\n   - This means `param` can be set to any header name that is not in the common list.\n\n3. **Assignment to `bar`**:\n   - The variable `bar` is initially set to `\"This should never happen\"`.\n   - There i"
+  },
+  "BenchmarkTest00523": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through the HTTP headers via `request.headers.getlist(\"BenchmarkTest00523\")`.\n\n2. **Assignment to `param`**:\n   - The first element of the list returned by `getlist` is assigned to `param`.\n     ```python\n     param = headers[0]\n     ```\n\n3. **Assignment to `bar`**:\n   - The value of `param` is directly assigned to `bar`.\n     ```python\n     bar = param\n     ```\n\n4. **Path Construction**:\n   - The `pathlib.Path` object `testfil"
+  },
+  "BenchmarkTest00181": {
+    "flagged": false,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.form.getlist(\"BenchmarkTest00181\")`, which retrieves a list of values associated with the form parameter \"BenchmarkTest00181\".\n   - The first value from this list is assigned to the variable `param`.\n\n2. **Conditional Assignment**:\n   - A string `possible` is defined as `\"ABC\"`.\n   - The character at index 1 of `possible` is assigned to `guess`, so `guess` becomes `'B'`.\n   - A `match` statement is used to dete"
+  },
+  "BenchmarkTest01111": {
+    "flagged": true,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request` object in the `BenchmarkTest01111_post()` function.\n   - Specifically, it is retrieved via `scr.get_safe_value(\"BenchmarkTest01111\")`.\n\n2. **Data Flow**:\n   - The user input is stored in the variable `param`.\n   - The value of `bar` is determined by a conditional expression: `\"This should never happen\" if (7*42) - num > 200 else param`.\n   - Since `(7*42) - num` evaluates to `294 - 106 = 188`, which is not gre"
+  },
+  "BenchmarkTest00170": {
+    "flagged": false,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.form.getlist(\"BenchmarkTest00170\")`.\n   - This value is stored in the variable `values`.\n\n2. **Assignment to `param`**:\n   - If `values` is not empty, `param` is assigned the first element of `values`, i.e., `param = values[0]`.\n\n3. **Configuration Setup**:\n   - A `ConfigParser` object `conf64047` is created and configured with a section named 'section64047'.\n   - Two keys are set in this section: 'keyA-64047' "
+  },
+  "BenchmarkTest01012": {
+    "flagged": false,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.path` in the `BenchmarkTest01012_post()` function.\n   \n2. **Processing of User Input**:\n   - The path is split into parts using `parts = request.path.split(\"/\")`.\n   - The second part of the path (`parts[1]`) is assigned to `param`.\n\n3. **Flow Through Dictionary**:\n   - A dictionary `map72463` is created.\n   - `param` (user input) is stored in `map72463['keyB-72463']`.\n   - The value of `bar` is initially set t"
+  },
+  "BenchmarkTest00908": {
+    "flagged": true,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "### Data-Flow Trace:\n\n1. **User Input Entry**:\n   - User input enters through `request.query_string` in the `BenchmarkTest00908_post()` function.\n   \n2. **Parameter Extraction**:\n   - The query string is decoded to a UTF-8 string and searched for the parameter \"BenchmarkTest00908\".\n   - If found, the value of this parameter is extracted and URL-decoded using `urllib.parse.unquote_plus(param)`.\n\n3. **Variable Assignment**:\n   - The variable `bar` is initially set to the hardcoded string `\"alsosaf"
+  },
+  "BenchmarkTest00099": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - `param = request.form.get(\"BenchmarkTest00099\")`: User input is captured from the form data.\n\n2. **Initial Assignment**:\n   - If `param` is not provided, it defaults to an empty string: `if not param: param = \"\"`.\n\n3. **Configuration Setup**:\n   - A `ConfigParser` object (`conf52528`) is created and a section named `'section52528'` is added.\n   - Two keys are set in this section: `'keyA-52528'` with the value `'a-Value'`, and `'keyB-52528'` with"
+  },
+  "BenchmarkTest00454": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - `param = request.headers.get(\"BenchmarkTest00454\")`: User input is retrieved from the HTTP headers with the key \"BenchmarkTest00454\".\n\n2. **Initial Check and Assignment**:\n   - `if not param: param = \"\"`: If `param` is empty or None, it is set to an empty string.\n\n3. **Base64 Encoding and Decoding**:\n   - `tmp = base64.b64encode(param.encode('utf-8'))`: The user input (`param`) is encoded to a base64 byte string.\n   - `bar = base64.b64decode(tmp"
+  },
+  "BenchmarkTest00455": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - `param` is assigned the value of `request.headers.get(\"BenchmarkTest00455\")`, which means it can contain user-controlled input from the HTTP headers.\n\n2. **Data Flow Through Assignments and Dictionaries**:\n   - `map61311['keyB-61311']` is assigned the value of `param`.\n   - `bar` is then assigned the value of `map61311['keyB-61311']`, which means `bar` also contains user-controlled input.\n\n3. **Dangerous Sink**:\n   - The SQL query is constructed"
+  },
+  "BenchmarkTest00284": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.form` via the `request_wrapper(request)` method in `helpers.separate_request`.\n   - The specific parameter being captured is `\"BenchmarkTest00284\"`.\n\n2. **Assignment to `param`**:\n   - The value of `\"BenchmarkTest00284\"` from the form data is assigned to the variable `param`.\n\n3. **Conditional Assignment to `bar`**:\n   - Initially, `bar` is set to the string `\"This should never happen\"`.\n   - There is a conditi"
+  },
+  "BenchmarkTest00283": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.form` via the `get_form_parameter(\"BenchmarkTest00283\")` method in the `helpers.separate_request.request_wrapper(request)` call.\n   - This user input is stored in the variable `param`.\n\n2. **Data Flow Through Assignments and Dictionaries**:\n   - The value of `param` is assigned to `map8812['keyB-8812']`.\n   - The value of `map8812['keyB-8812']` is then assigned to the variable `bar`.\n\n3. **Dangerous Sink**:\n   "
+  },
+  "BenchmarkTest00192": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - `values = request.form.getlist(\"BenchmarkTest00192\")`: User input is captured from the form data with the key `\"BenchmarkTest00192\"` and stored in the list `values`.\n\n2. **Assignment to `param`**:\n   - `if values: param = values[0]`: If `values` is not empty, the first element of `values` (user input) is assigned to `param`.\n\n3. **Conditional Assignment to `bar`**:\n   - `possible = \"ABC\"`: A string `\"ABC\"` is assigned to `possible`.\n   - `guess "
+  },
+  "BenchmarkTest01229": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through the `request` object in the `BenchmarkTest01229_post()` function.\n   - Specifically, it is retrieved using `scr.get_safe_value(\"BenchmarkTest01229\")`.\n\n2. **Data Flow Through Assignments**:\n   - The value retrieved from `scr.get_safe_value(\"BenchmarkTest01229\")` is assigned to the variable `param`.\n\n3. **Conditional Branches and Overwrites**:\n   - There are no conditional branches or overwrites that modify `param` befor"
+  },
+  "BenchmarkTest01021": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.path` which is part of the URL path.\n\n2. **Path Splitting**:\n   - The path is split using `parts = request.path.split(\"/\")`.\n   - This results in a list where `parts[1]` would be the second segment of the URL path.\n\n3. **Parameter Assignment**:\n   - `param = parts[1]` assigns the second segment of the URL path to `param`.\n\n4. **Conditional Check and List Manipulation**:\n   - The code checks if `param` is not em"
+  },
+  "BenchmarkTest00011": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - The user input enters through the cookie named `BenchmarkTest00011` via `request.cookies.get(\"BenchmarkTest00011\", \"noCookieValueSupplied\")`.\n\n2. **Variable Assignment**:\n   - The value from the cookie is assigned to the variable `param`.\n     ```python\n     param = urllib.parse.unquote_plus(request.cookies.get(\"BenchmarkTest00011\", \"noCookieValueSupplied\"))\n     ```\n\n3. **Conditional Check**:\n   - There is a conditional check that assigns `para"
+  },
+  "BenchmarkTest00285": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.form` via the `request_wrapper(request)` method.\n   - Specifically, `param = wrapped.get_form_parameter(\"BenchmarkTest00285\")`.\n\n2. **Assignment and Overwriting**:\n   - The value of `param` is assigned to `bar` after being set in the configuration parser: `conf39490.set('section39490', 'keyB-39490', param)`.\n   - Then, `bar` is retrieved from the configuration parser: `bar = conf39490.get('section39490', 'keyB-"
+  },
+  "BenchmarkTest00168": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Data-flow Trace\n\n1. **User Input Entry**:\n   - `param = request.form.get(\"BenchmarkTest00168\")`: User input is captured from the form data.\n\n2. **Conditional Assignment**:\n   - `possible = \"ABC\"`\n   - `guess = possible[0]`: The value of `guess` is set to 'A'.\n   - `match guess:`: A match statement is used to determine the value of `bar`.\n     - Since `guess` is 'A', `bar = param`: User input (`param`) is assigned to `bar`.\n\n3. **Command Construction**:\n   - `argStr = \"\"`\n   - Platform check "
+  },
+  "BenchmarkTest00899": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Data-flow Trace\n\n1. **User Input Entry**:\n   - User input enters through the `request` object in the `BenchmarkTest00899_post()` function.\n   - The user-controlled parameter is retrieved using `wrapped.get_query_parameter(\"BenchmarkTest00899\")`.\n\n2. **Parameter Assignment**:\n   - The value of `param` is assigned from `wrapped.get_query_parameter(\"BenchmarkTest00899\")`.\n   - If `param` is not provided, it defaults to an empty string.\n\n3. **Conditional Logic**:\n   - The variable `guess` is set"
+  },
+  "BenchmarkTest00607": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Data-flow Trace\n\n1. **User Input Entry**:\n   - User input enters through the HTTP headers via `request.headers.getlist(\"BenchmarkTest00607\")`.\n   - This value is stored in the variable `headers`.\n\n2. **Assignment and Transformation**:\n   - If `headers` is not empty, the first element of `headers` (i.e., `headers[0]`) is assigned to `param`.\n   - The variable `string50110` is initialized with the string `'help'`.\n   - The value of `param` is then concatenated to `string50110`, resulting in `s"
+  },
+  "BenchmarkTest00511": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Data-flow Trace\n\n1. **User Input Entry**:\n   - User input enters through the `request.headers.get(\"BenchmarkTest00511\")`.\n\n2. **Flow of User Input**:\n   - The value from `request.headers.get(\"BenchmarkTest00511\")` is assigned to the variable `param`.\n   - If `param` is not empty, it is added to a list `lst` as the second element.\n   - The first element 'safe' is then removed using `lst.pop(0)`, leaving `bar` with the value of `param`.\n\n3. **Command Construction**:\n   - An argument list `argL"
+  },
+  "BenchmarkTest00431": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.form.keys()` and `request.form.getlist(name)` in the `BenchmarkTest00431_post` function.\n   - The loop iterates over form keys, and if any key contains \"BenchmarkTest00431\" in its value list, that key is assigned to `param`.\n\n2. **Data Flow**:\n   - `param` is directly assigned the value of a form key that matches the condition.\n   - `bar` is then assigned the value of `param`.\n\n3. **Command Construction**:\n   -"
+  },
+  "BenchmarkTest00512": {
+    "flagged": false,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Data-flow Trace\n\n1. **User Input Entry**:\n   - User input enters through the HTTP header `BenchmarkTest00512` using `request.headers.get(\"BenchmarkTest00512\")`.\n\n2. **Assignment to `param`**:\n   - The value from the header is assigned to the variable `param`.\n   - If no header is provided, `param` is set to an empty string.\n\n3. **Configuration Parsing**:\n   - A `ConfigParser` object `conf41882` is created and a section named 'section41882' is added.\n   - Two keys are set in this section: 'ke"
+  },
+  "BenchmarkTest00900": {
+    "flagged": false,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Data-flow Trace\n\n1. **User Input Entry**:\n   - User input enters through the `request` object in the `BenchmarkTest00900_post()` function.\n   - Specifically, it is captured by `param = wrapped.get_query_parameter(\"BenchmarkTest00900\")`.\n\n2. **Flow of User Input**:\n   - The value of `param` is initially set to the query parameter \"BenchmarkTest00900\".\n   - If no such parameter is provided, `param` defaults to an empty string (`\"\"`).\n\n3. **Assignment and Overwriting**:\n   - A `ConfigParser` ob"
+  },
+  "BenchmarkTest01097": {
+    "flagged": true,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Data-flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.path` in the `BenchmarkTest01097_post()` function.\n   \n2. **Data Flow**:\n   - `parts = request.path.split(\"/\")`: Splits the URL path into parts.\n   - `param = parts[1]`: Assigns the second part of the URL path to `param`.\n   - If `param` is empty, it is set to an empty string.\n\n3. **Conditional Logic**:\n   - The code checks if `7 * 42 - num > 200`. Given that `num = 86`, this condition evaluates to `False`.\n   "
+  },
+  "BenchmarkTest00736": {
+    "flagged": false,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Data-flow Trace\n\n1. **User Input Entry**:\n   - `param = request.args.get(\"BenchmarkTest00736\")`: User input is captured from the query parameter `BenchmarkTest00736`.\n\n2. **Data Flow Through Assignments and Dictionaries**:\n   - `map81232['keyB-81232'] = param`: The user input (`param`) is stored in the dictionary `map81232` with the key `'keyB-81232'`.\n   - `bar = map81232['keyB-81232']`: The value of `bar` is set to the value of `map81232['keyB-81232']`, which is the user input.\n   - `bar ="
+  },
+  "BenchmarkTest00350": {
+    "flagged": false,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "### Data-flow Trace\n\n1. **User Input Entry**:\n   - User input enters through the form parameter `BenchmarkTest00350` via `request.form`.\n\n2. **Flow of User Input**:\n   - The user input is retrieved using `wrapped.get_form_parameter(\"BenchmarkTest00350\")` and stored in the variable `param`.\n   - If `param` is not provided, it defaults to an empty string.\n\n3. **Assignments and Transformations**:\n   - The value of `param` is assigned to `map11630['keyB-11630']`.\n   - The variable `bar` is initially"
+  },
+  "BenchmarkTest00507": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Data-Flow Trace:\n\n1. **User Input Entry**:\n   - `param = request.headers.get(\"BenchmarkTest00507\")`: User input enters through the HTTP header `BenchmarkTest00507`.\n\n2. **Conditional Assignment**:\n   - `possible = \"ABC\"`\n   - `guess = possible[0]`: The variable `guess` is set to `'A'`.\n   \n3. **Match Statement**:\n   - The `match guess:` statement evaluates the value of `guess`, which is `'A'`.\n   - Since `guess` is `'A'`, the code executes `bar = param`. Therefore, `bar` now holds the user i"
+  },
+  "BenchmarkTest00898": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Data-Flow Trace:\n\n1. **User Input Entry**:\n   - User input enters through the `request` object in the `BenchmarkTest00898_post()` function.\n   - Specifically, it comes from `wrapped.get_query_parameter(\"BenchmarkTest00898\")`.\n\n2. **Data Flow**:\n   - The value retrieved by `get_query_parameter` is stored in the variable `param`.\n   - If `param` is empty or not provided, it defaults to an empty string (`\"\"`).\n\n3. **Conditional Assignment**:\n   - The variable `bar` is initially set to the strin"
+  },
+  "BenchmarkTest00735": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Data-Flow Trace:\n\n1. **User Input Entry**:\n   - `param = request.args.get(\"BenchmarkTest00735\")`: User input enters through the query parameter `BenchmarkTest00735`.\n\n2. **Initial Check and Assignment**:\n   - `if not param: param = \"\"`: If `param` is empty or `None`, it is set to an empty string.\n\n3. **Sanitization**:\n   - `bar = markupsafe.escape(param)`: The user input (`param`) is escaped using `markupsafe.escape`.\n\n4. **Dangerous Sink**:\n   - `unpickled = pickle.loads(base64.urlsafe_b64d"
+  },
+  "BenchmarkTest00433": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.form.keys()` and `request.form.getlist(name)`.\n   - The loop iterates over form keys, and if any key's value contains \"BenchmarkTest00433\", that key is assigned to the variable `param`.\n\n2. **Data Flow Through Assignments**:\n   - `param` is assigned a user-controlled value from the form data.\n   - This value is then stored in the dictionary `map74329` under the key `'keyB-74329'`.\n   - The variable `bar` is ass"
+  },
+  "BenchmarkTest00269": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.form.getlist(\"BenchmarkTest00269\")` in the `BenchmarkTest00269_post()` function.\n   - This retrieves a list of values associated with the form parameter \"BenchmarkTest00269\".\n\n2. **Assignment to `param`**:\n   - The first element of the list (`values[0]`) is assigned to the variable `param`.\n   - If `values` is empty, `param` remains an empty string.\n\n3. **Processing by `ThingFactory.createThing()` and `doSometh"
+  },
+  "BenchmarkTest00658": {
+    "flagged": false,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.headers.keys()` and `request.headers.get_all(name)`.\n   - The loop iterates over all header names, skipping common headers defined in `helpers.utils.commonHeaderNames`.\n\n2. **Parameter Assignment**:\n   - If a non-common header is found, its name is assigned to the variable `param` and breaks out of the loop.\n   - Example: If a custom header `X-Custom-Header` is present, `param` will be set to `'X-Custom-Header'"
+  },
+  "BenchmarkTest00904": {
+    "flagged": false,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request` object in the `BenchmarkTest00904_post()` function.\n   - Specifically, it is captured via `wrapped.get_query_parameter(\"BenchmarkTest00904\")`.\n\n2. **Data Flow**:\n   - The value of `param` is obtained from the query parameter \"BenchmarkTest00904\".\n   - If `param` is not empty, it is split by spaces and the first element is assigned to `bar`.\n   - `bar` is then used as input to `yaml.safe_load(bar)`.\n\n3. **Condi"
+  },
+  "BenchmarkTest00435": {
+    "flagged": false,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.form.keys()` and `request.form.getlist(name)` in the `BenchmarkTest00435_post` function.\n\n2. **Parameter Assignment**:\n   - The code iterates over the keys of `request.form`. If any key contains \"BenchmarkTest00435\" in its associated values, that key is assigned to the variable `param`.\n\n3. **Bar Variable Assignment**:\n   - If `param` is not empty, it is split by spaces and the first element of the resulting li"
+  },
+  "BenchmarkTest00434": {
+    "flagged": false,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.form.keys()` and `request.form.getlist(name)` in the `BenchmarkTest00434_post` function.\n\n2. **Parameter Assignment**:\n   - The code iterates over the keys of `request.form`.\n   - If any key contains \"BenchmarkTest00434\" in its corresponding value list, that key is assigned to the variable `param`.\n\n3. **Transformation and Flow**:\n   - The `param` variable is then passed to `thing.doSomething(param)`, where `th"
+  },
+  "BenchmarkTest00997": {
+    "flagged": false,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.query_string` in the `BenchmarkTest00997_post()` function.\n\n2. **Processing Query String**:\n   - The query string is decoded to a UTF-8 string.\n   - The code searches for the parameter `BenchmarkTest00997` within the query string.\n   - If found, it extracts the value of this parameter and decodes any URL-encoded characters using `urllib.parse.unquote_plus`.\n\n3. **Conditional Assignment**:\n   - A variable `num` "
+  },
+  "BenchmarkTest00161": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "### Data-Flow Trace:\n\n1. **User Input Entry**:\n   - `param = request.form.get(\"BenchmarkTest00161\")`: User input is captured from the form data with the key \"BenchmarkTest00161\".\n\n2. **Conditional Assignment**:\n   - `bar = \"This should never happen\" if (7*42) - num > 200 else param`: The value of `param` is conditionally assigned to `bar`. Here, `(7*42) - num` evaluates to `294 - 106`, which equals `188`. Since `188` is not greater than `200`, the condition fails, and `bar` is assigned the value"
+  },
+  "BenchmarkTest00728": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - `param = request.args.get(\"BenchmarkTest00728\")`: User input is captured from the query parameter `BenchmarkTest00728`.\n\n2. **Initial Assignment**:\n   - If `param` is not provided, it defaults to an empty string: `if not param: param = \"\"`.\n\n3. **Variable `possible` and `guess`**:\n   - `possible = \"ABC\"`: A hardcoded string.\n   - `guess = possible[0]`: This assigns the first character of `possible`, which is `'A'`, to `guess`.\n\n4. **Match Statem"
+  },
+  "BenchmarkTest00986": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.query_string` which is decoded to a UTF-8 string.\n   \n2. **Parameter Extraction**:\n   - The code searches for the parameter named \"BenchmarkTest00986\" in the query string.\n   - If found, it extracts the value of this parameter and decodes any URL-encoded characters using `urllib.parse.unquote_plus`.\n\n3. **Assignment to `param`**:\n   - The extracted parameter value is assigned to the variable `param`.\n\n4. **List"
+  },
+  "BenchmarkTest00503": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "### Data-flow Trace\n\n1. **User Input Entry**:\n   - User input enters through the HTTP header `BenchmarkTest00503` using `request.headers.get(\"BenchmarkTest00503\")`.\n\n2. **Assignment to `param`**:\n   - The value from the header is assigned to the variable `param`.\n   - If no header is provided, `param` is set to an empty string (`\"\"`).\n\n3. **Base64 Encoding and Decoding**:\n   - The `param` value is encoded to base64 using `base64.b64encode(param.encode('utf-8'))` and stored in the variable `tmp`."
+  },
+  "BenchmarkTest00159": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - `param = request.form.get(\"BenchmarkTest00159\")`: User input is captured from the form data with the key `\"BenchmarkTest00159\"`.\n\n2. **Initial Check and Assignment**:\n   - `if not param: param = \"\"`: If `param` is empty or `None`, it is set to an empty string.\n   \n3. **List Manipulation**:\n   - `lst = []`: An empty list `lst` is initialized.\n   - `lst.append('safe')`: The string `'safe'` is appended to the list.\n   - `lst.append(param)`: The use"
+  },
+  "BenchmarkTest01164": {
+    "flagged": true,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "### Data-Flow Trace:\n\n1. **User Input Entry**:\n   - User input enters through the `request` object in the `BenchmarkTest01164_post()` function.\n   - Specifically, it is captured by `scr.get_safe_value(\"BenchmarkTest01164\")`.\n\n2. **Value Assignment and Transformation**:\n   - The value retrieved from `get_safe_value` is assigned to the variable `param`.\n   - The variable `TestParam` is initialized with a hardcoded string `\"This should never happen\"`.\n   - There is an `if` condition that checks if "
+  },
+  "BenchmarkTest00263": {
+    "flagged": false,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through `request.form.getlist(\"BenchmarkTest00263\")` which retrieves a list of values associated with the form parameter \"BenchmarkTest00263\".\n   - This value is stored in the variable `values`.\n\n2. **Assignment to `param`**:\n   - If `values` is not empty, the first element of `values` (`values[0]`) is assigned to `param`.\n   - Therefore, `param` now holds user-controlled input.\n\n3. **Conditional Assignment to `bar`**:\n   - The"
+  },
+  "BenchmarkTest00892": {
+    "flagged": true,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through the `request` object in the `BenchmarkTest00892_post` function.\n   - Specifically, it is retrieved using `wrapped.get_query_parameter(\"BenchmarkTest00892\")`.\n\n2. **Assignment and Overwriting**:\n   - The user input is assigned to the variable `param`.\n   - If `param` is empty or not provided, it defaults to an empty string (`\"\"`).\n\n3. **Conditional Assignment**:\n   - The value of `TestParam` is set to `\"This should never"
+  },
+  "BenchmarkTest00162": {
+    "flagged": false,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "### Data-Flow Trace:\n\n1. **User Input Entry**:\n   - `param = request.form.get(\"BenchmarkTest00162\")`: User input is captured from the form data.\n\n2. **Initial Assignment**:\n   - If `param` is not provided, it defaults to an empty string: `if not param: param = \"\"`.\n\n3. **Conditional Logic**:\n   - `possible = \"ABC\"` and `guess = possible[1]`: This sets `guess` to 'B'.\n   - The `match` statement evaluates `guess`:\n     - Since `guess` is 'B', the case `'B'` is matched, and `bar` is set to `'bob'`."
+  },
+  "BenchmarkTest00602": {
+    "flagged": false,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "### Data-Flow Trace\n\n1. **User Input Entry**:\n   - User input enters through the HTTP headers via `request.headers.getlist(\"BenchmarkTest00602\")`.\n   - This value is stored in the variable `headers`.\n\n2. **Assignment to `param`**:\n   - If `headers` is not empty, the first element of `headers` (i.e., `headers[0]`) is assigned to `param`.\n   - Therefore, `param` now holds user-controlled input.\n\n3. **Configuration Setup**:\n   - A `ConfigParser` object named `conf75466` is created.\n   - Two keys ar"
+  }
+}

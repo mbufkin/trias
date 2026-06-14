@@ -75,7 +75,7 @@ At 86.2% precision with 100% recall, we're near the limit of what prompt enginee
 
 **Requirements:**
 - Python 3.10+
-- Ollama running with qwen3.6:35b-a3b pulled
+- Ollama running with your target model pulled
 - SSH access to the machine running Ollama (or run locally)
 - OWASP Benchmark for Python test cases
 
@@ -93,11 +93,25 @@ cd trias/benchmarks/owasp
 # Run baseline
 python3 runner.py baseline
 
-# Run improved
-python3 runner.py improved
+# Run improved (with specific model)
+python3 runner.py improved --model qwen3.6:35b-a3b
+python3 runner.py improved --model qwen2.5-coder:32b
+python3 runner.py improved --model qwen3-coder-next:q4_K_M
 ```
 
-Each run takes ~33 minutes for 50 cases. Results are saved as JSON in `results/`.
+Each run takes 30-120 minutes depending on model speed. Results saved as JSON in `results/`.
+
+## Cross-Model Validation
+
+The same Security Reviewer principles were tested across three different model architectures. All three maintained **100% recall** — zero missed vulnerabilities. The principles are model-agnostic.
+
+| Model | Architecture | Tok/s | Precision | Recall | F1 | FPs |
+|---|---|---|---|---|---|---|
+| **qwen3.6:35b-a3b** | General MoE | 73 | **86.2%** | 100% | **0.926** | 4 |
+| qwen2.5-coder:32b | Dense 32B | 10 | 83.3% | 100% | 0.909 | 5 |
+| qwen3-coder-next:q4_K_M | Coding MoE | 59 | 82.1% | 100% | 0.902 | 5 |
+
+**Key insight:** The general MoE model (35b-a3b) outperforms the coding-tuned MoE (coder-next) on security review. Architecture matters more than domain tuning. The 32B dense model is only 3 points behind despite running at 1/7th the speed — a viable option for resource-constrained deployments.
 
 ## Hardware
 

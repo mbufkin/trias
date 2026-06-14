@@ -1,0 +1,346 @@
+{
+  "BenchmarkTest00180": {
+    "error": "SSH error: ",
+    "expected": true
+  },
+  "BenchmarkTest00008": {
+    "error": "SSH error: ",
+    "expected": true
+  },
+  "BenchmarkTest00618": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "Let me trace the data flow step by step to determine if there's a Path Traversal vulnerability.\n\n1. **User input entry point**: \n   - The function reads from `request.headers` in a loop: `for name in request.headers.keys()`\n   - It skips common header names (via `helpers.utils.commonHeaderNames`)\n   - For the first non-common header, it sets `param = name`\n\n2. **Processing of user input**:\n   - `param` is then used as a value to store in a ConfigParser object: `conf42704.set('section42704', 'key"
+  },
+  "BenchmarkTest00610": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "Let me trace the data flow step by step to determine if there's a Path Traversal vulnerability.\n\n1. **User input entry point**: \n   - The function processes HTTP headers via `request.headers`\n   - Specifically, it iterates through header names and sets `param = name` where `name.lower()` is NOT in `helpers.utils.commonHeaderNames`\n\n2. **Processing of user-controlled value**:\n   - `bar = \"This should never happen\"` (hardcoded string)\n   - Then: `if 'should' in bar:` \u2192 this condition is TRUE becau"
+  },
+  "BenchmarkTest00523": {
+    "flagged": true,
+    "expected": true,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input entry point**: \n   - The route accepts both GET and POST requests to `/benchmark/pathtraver-00/BenchmarkTest00523`\n   - For GET, it calls `BenchmarkTest00523_post()`\n   - User input comes from: `request.headers.getlist(\"BenchmarkTest00523\")` \u2014 specifically the first header value if present\n\n2. **Variable assignments**:\n   - `param = \"\"` (initially empty string)\n   - If headers exist, `param = headers[0]` \u2014 so `param` now contains user-con"
+  },
+  "BenchmarkTest00181": {
+    "flagged": false,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "Let me trace the data flow step by step to determine if user input can reach a dangerous sink without sanitization.\n\n1. **User input entry point**: \n   - The route accepts both GET and POST requests to `/benchmark/pathtraver-00/BenchmarkTest00181`\n   - For POST: `values = request.form.getlist(\"BenchmarkTest00181\")` and `param = values[0]` if values exist\n   - For GET: it redirects to the POST handler via `return BenchmarkTest00181_post()`, so user input can come from query parameters too (though"
+  },
+  "BenchmarkTest01111": {
+    "flagged": true,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input entry point**: The function receives user-controlled input via `request` object (both GET and POST routes lead to the same handler).\n\n2. **Input extraction**:\n   - `scr = helpers.separate_request.request_wrapper(request)` wraps the request\n   - `param = scr.get_safe_value(\"BenchmarkTest01111\")` extracts the value of parameter \"BenchmarkTest01111\"\n   - This is clearly user-controlled input\n\n3. **Processing of input**:\n   - `num = 106`\n   -"
+  },
+  "BenchmarkTest00170": {
+    "flagged": false,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input entry point**: \n   - `request.form.getlist(\"BenchmarkTest00170\")` gets user-controlled input from POST form data\n   - `param = values[0]` assigns this user input to `param`\n\n2. **Configuration processing**:\n   - A ConfigParser object is created\n   - `conf64047.set('section64047', 'keyB-64047', param)` stores the user input in the config (but this doesn't matter since we don't read it back)\n   - `bar = conf64047.get('section64047', 'keyA-6"
+  },
+  "BenchmarkTest01012": {
+    "flagged": false,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input entry point**: \n   - The route accepts both GET and POST requests to `/benchmark/pathtraver-01/BenchmarkTest01012`\n   - In `BenchmarkTest01012_get()`, it calls `BenchmarkTest01012_post()`\n   - In `BenchmarkTest01012_post()`, user input enters via: `parts = request.path.split(\"/\")` and then `param = parts[1]`\n\n2. **Processing of user input**:\n   - `param = parts[1]` extracts the second element from the path split (e.g., if path is `/benchm"
+  },
+  "BenchmarkTest00908": {
+    "flagged": true,
+    "expected": false,
+    "category": "pathtraver",
+    "cwe": "22",
+    "content": "Let me trace the data flow step by step to determine if there's a Path Traversal vulnerability.\n\n1. **User input entry point**: \n   - The user input comes from `request.query_string` (line: `query_string = request.query_string.decode('utf-8')`)\n   - Specifically, it looks for `BenchmarkTest00908=` in the query string and extracts the value after it\n\n2. **Processing of user input**:\n   - The extracted parameter is URL-decoded with `urllib.parse.unquote_plus(param)`\n   - Then there's some list man"
+  },
+  "BenchmarkTest00099": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input entry point**: `param = request.form.get(\"BenchmarkTest00099\")` - This gets user-controlled input from a POST form field.\n\n2. **Initial handling**: If no param is provided, it defaults to an empty string: `if not param: param = \"\"`\n\n3. **Configuration processing**:\n   - A configparser object is created\n   - A section is added\n   - Two keys are set: keyA gets hardcoded 'a-Value', keyB gets the user input `param`\n   - Then `bar = conf52528."
+  },
+  "BenchmarkTest00454": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input source**: `request.headers.get(\"BenchmarkTest00454\")` - This gets user-controlled input from an HTTP header.\n\n2. **Initial handling**: \n   - If no header value, `param` is set to empty string `\"\"`\n   - Otherwise, `param` contains the raw header value (user-controlled)\n\n3. **Base64 encoding/decoding**:\n   - `tmp = base64.b64encode(param.encode('utf-8'))` - encodes the user input\n   - `bar = base64.b64decode(tmp).decode('utf-8')` - decodes "
+  },
+  "BenchmarkTest00455": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input source**: `request.headers.get(\"BenchmarkTest00455\")` - This gets user-controlled input from an HTTP header named \"BenchmarkTest00455\"\n\n2. **Initial handling**: The value is stored in variable `param`, with a default empty string if not present\n\n3. **Dictionary assignment**: `map61311['keyB-61311'] = param` - The user input is placed into a dictionary\n\n4. **Variable extraction**: `bar = map61311['keyB-61311']` - The value is extracted bac"
+  },
+  "BenchmarkTest00284": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Let me trace the data flow step by step to check for SQL Injection vulnerability:\n\n1. **User input entry point**: \n   - `request.form[\"BenchmarkTest00284\"]` is accessed via `wrapped.get_form_parameter(\"BenchmarkTest00284\")`\n   - This means user-controlled data from POST form parameter enters the function\n\n2. **Initial handling**:\n   - `param = wrapped.get_form_parameter(\"BenchmarkTest00284\")`\n   - If param is None/empty, it's set to empty string: `if not param: param = \"\"`\n\n3. **Critical code pa"
+  },
+  "BenchmarkTest00283": {
+    "flagged": true,
+    "expected": true,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Let me trace the data flow step by step to check for SQL Injection vulnerability:\n\n1. **User input entry point**: \n   - The function `BenchmarkTest00283_post()` gets user input via `wrapped.get_form_parameter(\"BenchmarkTest00283\")`\n   - This comes from a POST form parameter named \"BenchmarkTest00283\"\n   - If not provided, it defaults to an empty string\n\n2. **Data flow through variables**:\n   - `param = wrapped.get_form_parameter(\"BenchmarkTest00283\")` \u2190 user-controlled input\n   - `map8812['keyB-"
+  },
+  "BenchmarkTest00192": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Let me trace the data flow step by step:\n\n1. User input enters via `request.form.getlist(\"BenchmarkTest00192\")` - this is user-controlled input\n2. The first element (if exists) is assigned to `param`\n3. Then there's a match statement on `guess = possible[1]`, where `possible = \"ABC\"`, so `guess = 'B'`\n4. In the match statement:\n   - When `guess` is `'A'`: `bar = param`\n   - When `guess` is `'B'`: `bar = 'bob'` (hardcoded string)\n   - When `guess` is `'C'` or `'D'`: `bar = param`\n   - Otherwise: "
+  },
+  "BenchmarkTest01229": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input entry point**: The function receives user input via `request` object (either GET or POST to the same route)\n\n2. **Input processing**:\n   - `scr = helpers.separate_request.request_wrapper(request)` \u2014 wraps the request\n   - `param = scr.get_safe_value(\"BenchmarkTest01229\")` \u2014 retrieves the value for parameter \"BenchmarkTest01229\"\n\n3. **SQL construction and execution**:\n   - `sql = f'SELECT username from USERS where password = ?'` \u2014 SQL stri"
+  },
+  "BenchmarkTest01021": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input source**: The only user-controlled input is `request.path`, which comes from the URL path.\n\n2. **Processing of input**:\n   - `parts = request.path.split(\"/\")` splits the path (e.g., \"/benchmark/sqli-00/BenchmarkTest01021\" \u2192 ['', 'benchmark', 'sqli-00', 'BenchmarkTest01021'])\n   - `param = parts[1]` takes the first non-empty segment after splitting, which would be `'benchmark'`\n   - The code checks if `param` is empty and sets it to `\"\"` i"
+  },
+  "BenchmarkTest00011": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Let me trace the data flow step by step to check for SQL Injection vulnerability.\n\n1. **User input entry point**: \n   - The route accepts POST requests to `/benchmark/sqli-00/BenchmarkTest00011`\n   - User input comes from `request.cookies.get(\"BenchmarkTest00011\", \"noCookieValueSupplied\")`\n\n2. **Processing of user input**:\n   - The cookie value is URL-decoded with `urllib.parse.unquote_plus()`\n   - This decoded value becomes the variable `param`\n\n3. **Variable assignment and transformation**:\n  "
+  },
+  "BenchmarkTest00285": {
+    "flagged": false,
+    "expected": false,
+    "category": "sqli",
+    "cwe": "89",
+    "content": "Let me trace the data flow step by step to check for SQL Injection vulnerability.\n\n1. **User input entry point**: \n   - The route accepts both GET and POST requests to `/benchmark/sqli-00/BenchmarkTest00285`\n   - For POST, it gets form parameter `\"BenchmarkTest00285\"` via `wrapped.get_form_parameter(\"BenchmarkTest00285\")`\n\n2. **Initial value handling**:\n   - If no form parameter is provided, `param` defaults to empty string `\"\"`\n   - So user-controlled input flows into `param`\n\n3. **Configuratio"
+  },
+  "BenchmarkTest00168": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "Let me trace the data flow step by step to determine if user input reaches a dangerous command injection sink.\n\n1. **User input entry point**: \n   - `param = request.form.get(\"BenchmarkTest00168\")` \u2014 this gets user-controlled input from POST form data\n\n2. **Processing of user input**:\n   - If no param is provided, it defaults to empty string: `if not param: param = \"\"`\n   - Then there's a match statement on `guess` (which is hardcoded as `'A'`)\n     - Since `guess = possible[0]` and `possible = "
+  },
+  "BenchmarkTest00899": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "Let me trace the data flow step by step to check for Command Injection (CWE-78):\n\n1. **User input entry point**: \n   - `param = wrapped.get_query_parameter(\"BenchmarkTest00899\")` \u2014 this gets user-controlled input from the query parameter\n\n2. **Processing of user input**:\n   - `guess = possible[0]` where `possible = \"ABC\"` \u2192 `guess = 'A'`\n   - The `match guess:` statement evaluates `guess`, which is always `'A'` (hardcoded)\n   - Since `guess == 'A'`, the first case executes: `bar = param`\n\n3. **C"
+  },
+  "BenchmarkTest00607": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "Let me trace the data flow step by step to check for Command Injection (CWE-78):\n\n1. **User input entry point**: \n   - `request.headers.getlist(\"BenchmarkTest00607\")` - user can control this via HTTP headers\n\n2. **Initial assignment**:\n   - `param = headers[0]` if headers exist, otherwise empty string\n   - So `param` contains user-controlled data (if header is provided)\n\n3. **String construction**:\n   - `string50110 = 'help'`\n   - `string50110 += param` \u2190 user input added here\n   - `string50110 "
+  },
+  "BenchmarkTest00511": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "Let me trace the data flow step by step to check for Command Injection (CWE-78):\n\n1. **User input entry point**: \n   - `param = request.headers.get(\"BenchmarkTest00511\")` \u2014 user-controlled header value\n\n2. **Processing of user input**:\n   - If `param` is truthy, a list `lst` is created with elements: `'safe'`, `param`, `'moresafe'`\n   - Then `lst.pop(0)` removes the first element (`'safe'`)\n   - After pop, `lst[0]` becomes what was originally `lst[1]`, which is `param`\n   - So `bar = lst[0]` mea"
+  },
+  "BenchmarkTest00431": {
+    "flagged": true,
+    "expected": true,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "Let me trace the data flow step by step to check for Command Injection (CWE-78):\n\n1. **User input entry point**: \n   - `request.form.keys()` and `request.form.getlist(name)` \u2014 user-controlled form data\n\n2. **How the value is processed**:\n   ```python\n   param = \"\"\n   for name in request.form.keys():\n       if \"BenchmarkTest00431\" in request.form.getlist(name):\n           param = name  # \u2190 Here, 'param' gets set to a key from request.form (user-controlled)\n           break\n\n   bar = param  # \u2190 'b"
+  },
+  "BenchmarkTest00512": {
+    "flagged": false,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "Let me trace the data flow step by step to determine if there's a Command Injection vulnerability.\n\n1. **User input entry point**: \n   - `param = request.headers.get(\"BenchmarkTest00512\")` \u2014 This gets user-controlled input from an HTTP header\n\n2. **Configuration handling**:\n   - A ConfigParser object is created\n   - `conf41882.set('section41882', 'keyB-41882', param)` stores the user input in the config\n   - BUT then: `bar = conf41882.get('section41882', 'keyA-41882')` \u2014 This retrieves the value"
+  },
+  "BenchmarkTest00900": {
+    "flagged": false,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "Let me trace the data flow step by step to check for Command Injection (CWE-78):\n\n1. **User input entry point**: \n   - `param = wrapped.get_query_parameter(\"BenchmarkTest00900\")` \u2014 This gets user-controlled input from the query parameter\n\n2. **Configuration handling**:\n   - A ConfigParser object is created\n   - `conf10363.set('section10363', 'keyB-10363', param)` stores the user input in keyB\n   - BUT then: `bar = conf10363.get('section10363', 'keyA-10363')` \u2014 This retrieves the value for **keyA"
+  },
+  "BenchmarkTest01097": {
+    "flagged": false,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "Let me trace the data flow step by step to check for Command Injection (CWE-78):\n\n1. **User input entry point**: \n   - The route accepts both GET and POST requests to `/benchmark/cmdi-00/BenchmarkTest01097`\n   - User input comes from `request.path.split(\"/\")` where `param = parts[1]`\n   - For a URL like `/benchmark/cmdi-00/BenchmarkTest01097`, `parts[1]` would be `\"benchmark\"` (the first path segment after the leading slash)\n\n2. **Processing of user input**:\n   - `param = parts[1]` \u2192 gets the fi"
+  },
+  "BenchmarkTest00736": {
+    "flagged": false,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "Let me trace the data flow step by step to check for Command Injection (CWE-78):\n\n1. **User input entry point**: \n   - `param = request.args.get(\"BenchmarkTest00736\")` \u2014 This gets user-controlled input from the query parameter\n\n2. **Initial handling**:\n   - If no param is provided, it defaults to empty string `\"\"`\n   - So `param` can contain arbitrary user input (e.g., `\"test; whoami\"`)\n\n3. **Map assignment and reassignment**:\n   - `map81232['keyB-81232'] = param` \u2014 stores user input in the map\n"
+  },
+  "BenchmarkTest00350": {
+    "flagged": false,
+    "expected": false,
+    "category": "cmdi",
+    "cwe": "78",
+    "content": "Let me trace the data flow step by step to determine if there's a Command Injection vulnerability.\n\n1. **User input entry point**: \n   - The function receives user input via `request` (POST/GET)\n   - `param = wrapped.get_form_parameter(\"BenchmarkTest00350\")` extracts user-controlled data from form parameters\n\n2. **Data flow through variables**:\n   - `map11630['keyB-11630'] = param` stores the user input in a dictionary\n   - `bar = map11630['keyB-11630']` retrieves the user input into `bar`\n   - "
+  },
+  "BenchmarkTest00507": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input entry point**: \n   - `param = request.headers.get(\"BenchmarkTest00507\")` \u2014 this gets user-controlled input from an HTTP header\n\n2. **Initial handling**:\n   - If no header value, `param` defaults to empty string `\"\"`\n   - So `param` can be any string provided in the header (including malicious pickle data)\n\n3. **Control flow with match statement**:\n   ```python\n   possible = \"ABC\"\n   guess = possible[0]  # This is always 'A' since it's the"
+  },
+  "BenchmarkTest00898": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Let me trace the data flow step by step to determine if user input reaches a dangerous deserialization sink unsanitized.\n\n1. **User input entry point**: \n   - The route accepts both GET and POST requests to `/benchmark/deserialization-00/BenchmarkTest00898`\n   - User input comes from `request` via `wrapped.get_query_parameter(\"BenchmarkTest00898\")`\n\n2. **Initial assignment**:\n   - `param = wrapped.get_query_parameter(\"BenchmarkTest00898\")`\n   - If no parameter is provided, it defaults to empty s"
+  },
+  "BenchmarkTest00735": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Let me trace the data flow step by step:\n\n1. User input enters via `request.args.get(\"BenchmarkTest00735\")` \u2192 stored in `param`\n2. The `param` value is then passed through `markupsafe.escape()` \u2192 stored in `bar`\n   - Note: `markupsafe.escape()` only escapes HTML characters for safe display; it does NOT sanitize or validate the content for deserialization safety\n3. `bar` (which contains user input, possibly escaped for HTML but still containing malicious pickle data) is then used directly as inpu"
+  },
+  "BenchmarkTest00433": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Let me trace the data flow step by step to determine if user-controlled input reaches a dangerous deserialization sink.\n\n1. **User input entry point**: \n   - The function receives POST data via `request.form.keys()` and `request.form.getlist(name)`\n   - User can control which form field name contains \"BenchmarkTest00433\" in its values\n\n2. **How user input flows**:\n   - `param` is initialized as empty string\n   - Loop through `request.form.keys()` to find a key where the value list contains \"Benc"
+  },
+  "BenchmarkTest00269": {
+    "flagged": true,
+    "expected": true,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Let me trace the data flow step by step to determine if user input reaches a dangerous deserialization sink.\n\n1. **User input entry point**: \n   - `request.form.getlist(\"BenchmarkTest00269\")` gets user-controlled input from POST form data\n\n2. **Initial assignment**:\n   - `param = values[0]` (if values exist) \u2014 so `param` contains user-controlled data\n\n3. **Processing path**:\n   - `thing = helpers.ThingFactory.createThing()` creates some object\n   - `bar = thing.doSomething(param)` \u2014 this is crit"
+  },
+  "BenchmarkTest00658": {
+    "flagged": false,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Let me trace the data flow step by step to determine if user-controlled input reaches a dangerous deserialization sink.\n\n1. **User input entry point**: \n   - The function processes HTTP requests (GET/POST) to `/benchmark/deserialization-00/BenchmarkTest00658`\n   - User input enters via `request.headers` in the loop that iterates through header names\n\n2. **Input collection logic**:\n   ```python\n   for name in request.headers.keys():\n       if name.lower() in helpers.utils.commonHeaderNames:\n     "
+  },
+  "BenchmarkTest00904": {
+    "flagged": false,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Let me trace the data flow step by step to check for Insecure Deserialization (CWE-502):\n\n1. **User input entry point**: \n   - `request` object comes from HTTP request (GET or POST)\n   - `wrapped.get_query_parameter(\"BenchmarkTest00904\")` extracts user-controlled input from query parameters\n\n2. **Processing of user input**:\n   - `param = wrapped.get_query_parameter(\"BenchmarkTest00904\")` \u2192 user-controlled string\n   - If param is empty, it's set to `\"\"`\n   - `bar = param.split(' ')[0]` \u2192 takes fi"
+  },
+  "BenchmarkTest00435": {
+    "flagged": false,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input entry point**: \n   - `request.form.keys()` and `request.form.getlist(name)` \u2014 user-controlled form data\n\n2. **Initial processing**:\n   - The code loops through form keys, looking for any key whose value list contains \"BenchmarkTest00435\"\n   - When found, it sets `param = name` (so `param` is a form *key*, not the value)\n   - Then `bar = param.split(' ')[0]` \u2014 takes the first part of the key split by space\n\n3. **YAML loading**:\n   - `yaml."
+  },
+  "BenchmarkTest00434": {
+    "flagged": true,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Let me trace the data flow step by step to determine if user input reaches a dangerous deserialization sink.\n\n1. **User input entry point**: \n   - The route accepts both GET and POST requests\n   - For POST, `request.form.keys()` is used to iterate over form field names\n   - User-controlled input enters via `request.form.getlist(name)` where `name` comes from `request.form.keys()`\n\n2. **How param gets its value**:\n   ```python\n   for name in request.form.keys():\n       if \"BenchmarkTest00434\" in "
+  },
+  "BenchmarkTest00997": {
+    "flagged": false,
+    "expected": false,
+    "category": "deserialization",
+    "cwe": "502",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input entry point**: \n   - `request.query_string.decode('utf-8')` gets the query string from the URL\n   - The code extracts a parameter named \"BenchmarkTest00997\" from this query string\n   - After parsing, `param` contains user-controlled data (the value of the query parameter)\n\n2. **Data flow through assignments**:\n   - `num = 86`\n   - The condition `if 7 * 42 - num > 200:` evaluates to `if 294 - 86 > 200` \u2192 `if 208 > 200`, which is `True`\n   "
+  },
+  "BenchmarkTest00161": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input entry point**: \n   - `param = request.form.get(\"BenchmarkTest00161\")` \u2014 This gets user-controlled input from POST form data\n\n2. **Initial handling**:\n   - If no param is provided, it defaults to empty string `\"\"`\n   - So `param` can be any string value submitted by the user\n\n3. **Variable assignment chain**:\n   - `num = 106` (hardcoded)\n   - `bar = \"This should never happen\" if (7*42) - num > 200 else param`\n     - Let's check the conditi"
+  },
+  "BenchmarkTest00728": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input entry point**: \n   - `param = request.args.get(\"BenchmarkTest00728\")` \u2014 this gets user-controlled input from the query parameter\n\n2. **Initial handling**:\n   - If no param is provided, it defaults to empty string `\"\"`\n   - So `param` can be any string value provided by the user\n\n3. **Logic flow with match statement**:\n   - `guess = possible[0]` \u2192 `possible = \"ABC\"`, so `guess = 'A'`\n   - Since `guess` is always `'A'`, only the first case "
+  },
+  "BenchmarkTest00986": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input entry point**: \n   - `request.query_string.decode('utf-8')` gets the raw query string from the URL\n   - The code specifically looks for `\"BenchmarkTest00986=\"` in the query string\n   - It extracts everything after that parameter name as `param`\n\n2. **Processing path**:\n   - `param = urllib.parse.unquote_plus(param)` decodes URL-encoded characters\n   - Then there's a conditional block: if `param` is non-empty:\n     - Creates a list `lst`\n "
+  },
+  "BenchmarkTest00503": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input source**: The function gets user-controlled input from `request.headers.get(\"BenchmarkTest00503\")`. This is a header value sent by the client, which is user-controlled.\n\n2. **Initial assignment**: `param = request.headers.get(\"BenchmarkTest00503\")` \u2014 this captures the raw user input.\n\n3. **Base64 encoding/decoding transformation**:\n   - `tmp = base64.b64encode(param.encode('utf-8'))` encodes the user input to base64\n   - `bar = base64.b64"
+  },
+  "BenchmarkTest00159": {
+    "flagged": true,
+    "expected": true,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input source**: `request.form.get(\"BenchmarkTest00159\")` \u2014 this is user-controlled input from a POST form field.\n\n2. **Initial assignment**: `param = request.form.get(\"BenchmarkTest00159\")`\n\n3. **Processing logic**:\n   - If `param` is truthy (non-empty), it creates a list: `lst = []`\n   - Appends `'safe'`, then `param` (user input), then `'moresafe'`:  \n     `lst.append('safe')` \u2192 `lst.append(param)` \u2192 `lst.append('moresafe')`\n   - Then does `l"
+  },
+  "BenchmarkTest01164": {
+    "flagged": true,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input entry point**: \n   - The route accepts both GET and POST requests to `/benchmark/codeinj-00/BenchmarkTest01164`\n   - User input comes from `request` object via `helpers.separate_request.request_wrapper(request).get_safe_value(\"BenchmarkTest01164\")`\n\n2. **Variable assignments**:\n   - `param = scr.get_safe_value(\"BenchmarkTest01164\")` \u2014 this gets user-controlled input\n   - `TestParam = \"This should never happen\"` \u2014 hardcoded string\n   - Con"
+  },
+  "BenchmarkTest00263": {
+    "flagged": false,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input entry point**: \n   - `request.form.getlist(\"BenchmarkTest00263\")` gets user-controlled input from POST form data\n   - `param = values[0]` assigns the first value (if exists) to `param`\n\n2. **Processing path**:\n   - `possible = \"ABC\"` is hardcoded\n   - `guess = possible[1]` \u2192 this is `'B'` (index 1 of \"ABC\")\n   - The `match guess:` statement will always match the `'B'` case since `guess` is fixed to `'B'`\n\n3. **Critical observation**:\n   -"
+  },
+  "BenchmarkTest00892": {
+    "flagged": true,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Let me trace the data flow step by step to determine if user input reaches a dangerous sink unsanitized.\n\n1. **User input entry point**: \n   - `param = wrapped.get_query_parameter(\"BenchmarkTest00892\")` \u2014 this gets user-controlled query parameter from GET/POST request\n\n2. **Initial handling**:\n   - If no param, it defaults to empty string: `param = \"\"`\n   - Then we have a conditional logic:\n     ```python\n     TestParam = \"This should never happen\"\n     if 'should' not in TestParam:\n         bar"
+  },
+  "BenchmarkTest00162": {
+    "flagged": false,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input entry point**: `param = request.form.get(\"BenchmarkTest00162\")` \u2014 this gets user-controlled input from POST form data.\n\n2. **Processing path**:\n   - `possible = \"ABC\"` and `guess = possible[1]` \u2192 `guess = 'B'`\n   - The `match guess:` statement checks the value of `guess`, which is always `'B'` (hardcoded)\n   - For `case 'B':`, we have `bar = 'bob'` \u2014 a hardcoded string, NOT user input\n\n3. **Critical observation**: Since `guess` is always "
+  },
+  "BenchmarkTest00602": {
+    "flagged": false,
+    "expected": false,
+    "category": "codeinj",
+    "cwe": "94",
+    "content": "Let me trace the data flow step by step:\n\n1. **User input entry point**: \n   - `headers = request.headers.getlist(\"BenchmarkTest00602\")`\n   - If headers exist, `param = headers[0]` \u2014 this is user-controlled input (HTTP header value)\n\n2. **Configuration setup**:\n   - A ConfigParser object is created\n   - `'keyA-75466'` is set to the hardcoded string `'a_Value'`\n   - `'keyB-75466'` is set to `param` (the user-controlled input)\n\n3. **Critical line**:\n   - `bar = conf75466.get('section75466', 'keyA-"
+  }
+}
