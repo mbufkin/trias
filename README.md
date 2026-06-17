@@ -67,14 +67,56 @@ All configurable in `config.yaml`.
 > without execution-model understanding). Every finding gets human verification.
 > Trias is a second set of eyes, not a replacement for your own.
 
+## OWASP Benchmark — Independent Security Validation
+
+Trias has been validated against the [OWASP Benchmark for Python](https://github.com/OWASP-Benchmark/BenchmarkPython) —
+1,230 hand-crafted test cases spanning 11 vulnerability categories including
+path traversal, SQL injection, XSS, weak cryptography, and command injection.
+Every test case has a known ground truth: it IS vulnerable or it is NOT.
+
+The benchmark tests whether Trias can distinguish real vulnerabilities from
+safe code that *looks* suspicious — the hardest problem in static analysis.
+
+**Full run — 1,230 cases, single Lenovo ThinkStation PGX (32B-class models):**
+
+| Metric | Trias | Bandit (static analysis) |
+|---|---|---|
+| **Precision** | **92.9%** | 0.0% |
+| **Recall** | 55.1% | 0.0% |
+| **F1 Score** | 69.2% | 0.0% |
+| **Accuracy** | 81.9% | 63.3% |
+| **True Positives** | 249 | 0 |
+| **False Positives** | 19 | 0 |
+| **False Negatives** | 203 | 452 |
+
+**What this means:**
+
+- **When Trias says something is vulnerable, it's right 92.9% of the time.**
+  Only 19 false positives across 1,230 test cases. The verify phase —
+  which requires concrete exploit chain construction for every confirmed
+  finding — filters out the noise that plagues traditional static analysis.
+  Bandit, by comparison, flagged nothing at all.
+
+- **55% recall means there's room to grow.** 203 vulnerabilities slipped
+  through. Some categories (weak randomness, certain injection patterns)
+  are harder for 32B-class models to catch consistently. The architecture
+  supports swapping in larger models as hardware allows — the same council
+  with 70B+ models is expected to close much of this gap.
+
+- **This runs where API keys can't go.** No cloud. No data exfiltration.
+  No third-party dependency. A single workstation in a school district IT
+  closet, a hospital server room, or an air-gapped facility can run the
+  same pipeline.
+
+> **Methodology:** 3-pass council — FLAG (initial security scan) →
+> CHALLENGE (independent second model cross-checks every finding) →
+> VERIFY (exploit chain construction required for confirmation).
+> Full results and per-case verdicts in [benchmarks/owasp/full-run/](benchmarks/owasp/full-run/).
+
 ## Hardware
 
 Trias is designed to run on local, consumer-grade AI hardware. Below are
 real-world benchmarks from the machines it's been tested on.
-
-> **OWASP Benchmark validation:** See [benchmarks/owasp](benchmarks/owasp/) for
-> the full security review benchmark — 86.2% precision, 100% recall on the
-> OWASP Benchmark for Python using a single Lenovo ThinkStation PGX.
 
 ### Lenovo ThinkStation PGX (Primary)
 
