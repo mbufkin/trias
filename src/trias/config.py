@@ -41,6 +41,13 @@ _DEFAULT_CONFIG: dict[str, Any] = {
         "num_predict": 1536,
         "temperature": 0.3,
     },
+    "skeptic": {
+        "enabled": True,
+        "model": "qwen3-coder-next:q4_K_M",
+        "num_predict": 1024,
+        "temperature": 0.2,
+        "timeout": 180,
+    },
     "review": {
         "mode": "council",
         "max_file_chars": 5000,

@@ -617,17 +617,75 @@ def process_task(config: dict, task_path: Path) -> bool:
         synthesis = f"[SYNTHESIS FAILED: {e}]"
         synth_elapsed = 0
 
+    # === SKEPTIC GATE ===
+    # After synthesis, a skeptical model tries to DISPROVE each finding.
+    # This is adversarial reflection (FENRIR pattern): if the skeptic can
+    # construct a benign explanation or show the exploit path is broken,
+    # the finding is marked DISPUTED. Findings that survive skepticism
+    # have higher confidence. Inspired by [un]prompted 2026 talks:
+    #   - FENRIR: "adversarial reflection / disproof agent"
+    #   - Rami McCarthy: "AI never questions the abstraction you give it"
+    #   - Joshua Saxe: "the noise ceiling" — expert disagreement is real
+    skeptic_config = config.get("skeptic", {})
+    skeptic_enabled = skeptic_config.get("enabled", False)
+    skeptic_model = skeptic_config.get("model", syn_config["model"])
+    skeptic_elapsed = 0
+    skeptic_response = ""
+
+    if skeptic_enabled and synthesis and not synthesis.startswith("[SYNTHESIS FAILED") and code.strip():
+        write_status(config, task_id, "skeptic_check")
+
+        skeptic_prompt = (
+            "You are a SKEPTICAL SECURITY AUDITOR. Your job is to DISPROVE every\n"
+            "finding in the synthesis below. Assume every finding is a FALSE POSITIVE\n"
+            "until you can construct a working exploit. Do NOT agree with the reviewers\n"
+            "— find flaws in their analysis.\n\n"
+            "For each finding in the synthesis, answer:\n"
+            "1. Does user-controlled input ACTUALLY reach the dangerous sink?\n"
+            "   Walk the data flow explicitly. If any hop breaks the chain → DISPROVEN.\n"
+            "2. Is there a sanitization, validation, or transformation the reviewers missed?\n"
+            "3. Is the finding pattern-matching (\"f-string = SQLi\") without a real exploit path?\n"
+            "4. Could this be intentional / by-design behavior?\n\n"
+            "OUTPUT FORMAT — one verdict per finding:\n"
+            "DISPROVEN: [finding description] — [specific reason with code evidence]\n"
+            "STANDS: [finding description] — [why the skeptic cannot disprove it]\n\n"
+            f"ORIGINAL CODE:\n{_truncate_lines(code, 4000)}\n\n"
+            f"SYNTHESIS TO DISPROVE:\n{_truncate_lines(synthesis, 3000)}\n"
+        )
+
+        try:
+            t0 = time.time()
+            skeptic_response = ollama_generate(
+                config, skeptic_model, skeptic_prompt,
+                timeout=skeptic_config.get("timeout", 180),
+                num_predict=skeptic_config.get("num_predict", 1024),
+                temperature=skeptic_config.get("temperature", 0.2),
+            )
+            skeptic_elapsed = time.time() - t0
+            if not skeptic_response or not skeptic_response.strip():
+                skeptic_response = "[Skeptic returned empty response]"
+            print(f"  Skeptic ({skeptic_model}): {skeptic_elapsed:.0f}s, {len(skeptic_response)} chars", flush=True)
+        except Exception as e:
+            skeptic_response = f"[SKEPTIC FAILED: {e}]"
+            print(f"  Skeptic: FAILED — {e}", flush=True)
+
+        # Unload skeptic model to free GPU memory
+        if skeptic_model:
+            ollama_unload(config, skeptic_model)
+            time.sleep(2)
+
     # === BUILD REPORT ===
-    total_time = sum(r["elapsed_s"] for r in reviews) + synth_elapsed
+    total_time = sum(r["elapsed_s"] for r in reviews) + synth_elapsed + skeptic_elapsed
     succeeded = sum(1 for r in reviews if not r["response"].startswith("[FAILED"))
     failed = len(reviews) - succeeded
 
     ok_icon = "⚠️" if failed else "✅"
     mode_label = "Focused Review" if rev_mode == "focused" else "Council"
+    skeptic_label = " + Skeptic Gate" if (skeptic_enabled and skeptic_response) else ""
     report = f"""# Code Review — {task_id}
 
 **Files:** {', '.join(files)}
-**Mode:** {mode_label}
+**Mode:** {mode_label}{skeptic_label}
 **Focus:** {focus}
 **Date:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}
 
@@ -641,6 +699,16 @@ def process_task(config: dict, task_path: Path) -> bool:
         report += f"- {icon} **{r['label']}** — `{r['model']}` — {r['elapsed_s']}s, {r['chars']} chars\n"
 
     report += f"\n---\n\n## Synthesis ({synth_elapsed:.0f}s)\n\n{synthesis}\n"
+
+    # Append skeptic gate section if it ran
+    if skeptic_enabled and skeptic_response:
+        dispute_count = skeptic_response.count("DISPROVEN:") if skeptic_response else 0
+        stands_count = skeptic_response.count("STANDS:") if skeptic_response else 0
+        report += f"\n---\n\n## 🛡️ Skeptic Gate ({skeptic_model}, {skeptic_elapsed:.0f}s)\n\n"
+        report += f"_Adversarial disproof check — findings survive only if skeptic cannot disprove._\n\n"
+        report += f"**Disproven: {dispute_count}** | **Stands: {stands_count}**\n\n"
+        report += f"{skeptic_response}\n"
+
     report += f"\n---\n\n*Total: {total_time:.0f}s | {mode_label}: {succeeded}/{len(reviewers)} | Synthesis: {syn_config['model']}*"
 
     report += "\n\n---\n\n## Raw Reviews (full text)\n\n"
@@ -663,6 +731,13 @@ def process_task(config: dict, task_path: Path) -> bool:
                       "elapsed_s": r["elapsed_s"]} for r in reviews],
         "completed": datetime.now(timezone.utc).isoformat(),
     }
+    if skeptic_enabled and skeptic_response:
+        meta["skeptic"] = {
+            "model": skeptic_model,
+            "elapsed_s": round(skeptic_elapsed, 1),
+            "disproven_count": skeptic_response.count("DISPROVEN:") if skeptic_response else 0,
+            "stands_count": skeptic_response.count("STANDS:") if skeptic_response else 0,
+        }
     (Path(config["paths"]["status"]) / f"{task_id}.json").write_text(
         json.dumps(meta, indent=2))
 
