@@ -404,6 +404,81 @@ _ARCH_GLOSSARY = (
 )
 
 
+def _verify_exploit_chains(synthesis: str) -> str:
+    """Scan synthesis for HIGH/CRITICAL findings that lack exploit chain evidence.
+
+    Adkins ([un]prompted 2026): every HIGH severity claim must include a
+    concrete exploit path. Without one, it's pattern-matching, not a real
+    finding. This function appends a downgrade warning to the synthesis
+    if any HIGH findings are missing trace evidence.
+
+    Returns empty string if all HIGH findings have traces, or a downgrade
+    note to append to the synthesis.
+    """
+    import re
+
+    # Find the CONSENSUS section
+    consensus_start = synthesis.find("## 🔴 CONSENSUS")
+    if consensus_start < 0:
+        return ""
+
+    # Extract the section — search for next ## heading or end
+    consensus_text = synthesis[consensus_start:]
+    next_heading = re.search(r"\n##\s", consensus_text[3:])  # skip the heading itself
+    if next_heading:
+        consensus_text = consensus_text[:next_heading.start() + 3]
+
+    # Find table rows with severity markers
+    # Table format: | severity | issue | files | reviewers | trace_summary |
+    high_findings = re.findall(
+        r'\|\s*\*{0,2}(HIGH|CRITICAL)\*{0,2}\s*\|(.*?)(?=\n\||\n\n|\Z)',
+        consensus_text, re.IGNORECASE | re.DOTALL
+    )
+
+    if not high_findings:
+        return ""
+
+    downgrades = []
+    for severity, row in high_findings:
+        # Row format after severity: issue | files | reviewers | trace_summary
+        cols = [c.strip() for c in row.split("|")]
+        trace_col = cols[3] if len(cols) >= 4 else ""
+
+        # Evidence of a real trace: source→sink walkthrough, hop-by-hop,
+        # concrete inputs, exploit path markers
+        has_trace = any(marker in trace_col.lower() for marker in [
+            "source:", "hop ", "sink:", "exploit", "verdict:",
+            "attacker", "→", "->",
+        ])
+
+        # Evidence of NO real trace: empty, placeholder, generic description
+        is_empty = len(trace_col) < 30
+        is_placeholder = any(p in trace_col.lower() for p in [
+            "none", "n/a", "not applicable", "see above",
+        ])
+
+        if is_empty or (is_placeholder and not has_trace) or (not is_empty and not has_trace):
+            # Extract the issue description
+            issue = cols[1] if len(cols) > 1 else "unknown issue"
+            downgrades.append(f"  - **{severity}**: {issue[:100]}")
+
+    if not downgrades:
+        return ""
+
+    note = (
+        "\n\n---\n\n"
+        "## ⚠️ PROOF-OF-VULNERABILITY CHECK\n\n"
+        "_The following findings are flagged as HIGH/CRITICAL but lack "
+        "a concrete exploit chain (source → hop → sink walkthrough, "
+        "specific attacker input, or verifiable execution path). "
+        "Per [un]prompted 2026 (Adkins/Flynn): pattern matching without "
+        "a working exploit path is not a verified vulnerability._\n\n"
+        "**Downgrade to MEDIUM unless an exploit chain is provided:**\n\n"
+        + "\n".join(downgrades) + "\n"
+    )
+    return note
+
+
 def _file_checklist(code: str) -> str:
     """Generate a numbered file checklist for the prompt.
 
@@ -640,6 +715,17 @@ def process_task(config: dict, task_path: Path) -> bool:
     except Exception as e:
         synthesis = f"[SYNTHESIS FAILED: {e}]"
         synth_elapsed = 0
+
+    # === PROOF-OF-VULNERABILITY VERIFIER ===
+    # Adkins ([un]prompted 2026): eliminate false positives by requiring
+    # every HIGH finding to include a concrete exploit chain. If the
+    # synthesis model flags something HIGH but didn't actually walk the
+    # data flow, auto-downgrade it. This is a safety net — the synthesis
+    # prompt already asks for traces, but models sometimes skip them.
+    if synthesis and not synthesis.startswith("[SYNTHESIS FAILED"):
+        downgrade_notes = _verify_exploit_chains(synthesis)
+        if downgrade_notes:
+            synthesis += downgrade_notes
 
     # === SKEPTIC GATE ===
     # After synthesis, a skeptical model tries to DISPROVE each finding.
