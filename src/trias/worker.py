@@ -404,6 +404,28 @@ _ARCH_GLOSSARY = (
 )
 
 
+def _file_checklist(code: str) -> str:
+    """Generate a numbered file checklist for the prompt.
+
+    Carlini ([un]prompted 2026): LLMs fixate on one vulnerability and miss others
+    in large codebases. Explicit file-by-file checkpointing forces the model to
+    address every file in order before moving on.
+
+    Only activates when 2+ files are present. Single-file reviews don't need it.
+    """
+    import re
+    files = re.findall(r'=== (.+?) ===', code)
+    if len(files) <= 1:
+        return ""
+    return (
+        "FILES TO REVIEW (in order — do NOT skip any):\n"
+        + "\n".join(f"  [{i}] {f}" for i, f in enumerate(files, 1))
+        + "\n\nCRITICAL: Review each file separately. After completing analysis of a file,\n"
+        + "output '✓ FILE COMPLETE: [filename]' before moving to the next file.\n"
+        + "This ensures you do not fixate on one finding and miss others.\n\n"
+    )
+
+
 def build_focused_prompt(role_config: dict, principles_registry: dict,
                          code: str, round_n: int, total: int) -> str:
     """Build a role-specific review prompt from principles.
@@ -429,14 +451,15 @@ def build_focused_prompt(role_config: dict, principles_registry: dict,
     prompt = (
         f"Code review — Round {round_n} of {total}. "
         f"You are the **{label}**. Review ONLY through this lens.\n\n"
-        f"CODE:\n{code}\n\n"
-        f"=== YOUR PRINCIPLES ===\n\n"
-        f"{principles_text}\n\n"
-        f"=== OUTPUT FORMAT ===\n"
-        f"For each finding: severity (HIGH/MEDIUM/LOW), file:line, principle, description.\n"
-        f"Be specific and critical. Do not praise — find problems.\n"
-        f"Stay within your role. If you notice issues outside your domain, "
-        f"trust that another reviewer will catch them."
+        + _file_checklist(code)
+        + f"CODE:\n{code}\n\n"
+        + f"=== YOUR PRINCIPLES ===\n\n"
+        + f"{principles_text}\n\n"
+        + f"=== OUTPUT FORMAT ===\n"
+        + f"For each finding: severity (HIGH/MEDIUM/LOW), file:line, principle, description.\n"
+        + f"Be specific and critical. Do not praise — find problems.\n"
+        + f"Stay within your role. If you notice issues outside your domain, "
+        + f"trust that another reviewer will catch them."
     )
     return prompt
 
@@ -445,6 +468,7 @@ def build_council_prompt(code: str, focus: str, round_n: int, total: int) -> str
     prompt = (
         f"Code review — Round {round_n} of {total}. Review this code thoroughly.\n\n"
         + _ARCH_GLOSSARY
+        + _file_checklist(code)
         + f"CODE:\n{code}\n\n"
         + f"Focus on: {focus}.\n"
         + "For each finding: severity (HIGH/MEDIUM/LOW), file:line, category, description.\n"
