@@ -5,13 +5,16 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "trias"
 version = "0.1.0"
-description = "Local-first multi-model code review — three LLMs, one report"
+description = "Local-first multi-model code review — three LLMs, one report; passive scan lanes (see docs/SECURITY-LANES.md)"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
 dependencies = [
     "PyYAML>=6.0",
 ]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
 
 [project.scripts]
 trias = "trias.cli:main"
@@ -25,3 +28,9 @@ Repository = "https://github.com/mbufkin/trias"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+trias = ["static/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

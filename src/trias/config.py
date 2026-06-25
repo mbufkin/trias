@@ -17,40 +17,44 @@ _DEFAULT_CONFIG: dict[str, Any] = {
     "paths": {
         "mailbox": "~/.trias",
     },
-    "ollama": {
-        "url": "http://localhost:11434",
-        "timeout_per_model": 240,
-        "synthesis_timeout": 300,
+    # Trias uses llama.cpp (llama-server OpenAI API), not Ollama.
+    "llamacpp": {
+        "url": "http://localhost:8080/v1/chat/completions",
+        "timeout": 600,
     },
     "council": [
         {
-            "model": "qwen3-coder-next:q4_K_M",
-            "label": "MoE agentic — systems, security, deep module analysis",
+            "model": "gemma4-31b",
+            "label": "Security — data flow, sinks, exploit chains",
         },
         {
-            "model": "qwen2.5-coder:32b",
-            "label": "Dense 32B base — correctness, logic, seams & interfaces",
+            "model": "gemma4-31b",
+            "label": "Correctness — logic, edges, seams & interfaces",
         },
         {
-            "model": "qwen2.5-coder-opencode:latest",
-            "label": "Dense 32B OpenCode — patterns, locality, refactoring",
+            "model": "gemma4-31b",
+            "label": "Patterns — locality, leverage, maintainability",
         },
     ],
     "synthesis": {
-        "model": "qwen3-coder-next:q4_K_M",
+        "model": "gemma4-31b",
         "num_predict": 3072,
         "temperature": 0.3,
     },
     "skeptic": {
         "enabled": True,
-        "model": "nemotron-3-super:latest",
+        "model": "gemma4-31b",
         "num_predict": 2048,
         "temperature": 0.2,
-        "timeout": 240,
+        "timeout": 600,
     },
     "review": {
         "mode": "council",
-        "max_file_chars": 5000,
+        # sequential = one file per council pass (default, avoids whitewashing).
+        # batch = legacy all-files-in-one-prompt (only for small submissions).
+        "file_strategy": "sequential",
+        "max_file_chars": 12000,
+        "synthesis_chars_per_file": 4000,
         "num_predict": 2048,
         "temperature": 0.3,
         "poll_interval": 15,
@@ -58,17 +62,17 @@ _DEFAULT_CONFIG: dict[str, Any] = {
     },
     "focused_roles": {
         "security": {
-            "model": "qwen3-coder-next:q4_K_M",
+            "model": "gemma4-31b",
             "label": "Security Reviewer",
             "principles": ["data_flow_trace", "exploit_chain", "sink_classification", "input_verification"],
         },
         "architecture": {
-            "model": "qwen2.5-coder:32b",
+            "model": "gemma4-31b",
             "label": "Architecture Reviewer",
             "principles": ["deep_vs_shallow", "seams_and_interfaces", "locality", "leverage"],
         },
         "correctness": {
-            "model": "qwen2.5-coder-opencode:latest",
+            "model": "gemma4-31b",
             "label": "Correctness + Patterns Reviewer",
             "principles": ["logic_errors", "edge_cases", "refactoring_opportunities", "test_gaps"],
         },

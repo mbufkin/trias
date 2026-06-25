@@ -17,8 +17,47 @@ blind spots. Trias runs three *different* architectures against your code —
 MoE agentic, dense base, dense OpenCode-tuned — and synthesizes the overlap
 and unique insights.
 
-Runs entirely on local hardware via Ollama. No cloud, no API keys, no data
-exfiltration.
+Runs entirely on local hardware via **llama.cpp** (`llama-server`). No cloud,
+no API keys, no data exfiltration.
+
+## Security lanes (direction)
+
+Trias is **not one tool that does everything at once**. It is splitting into
+**focused lanes**:
+
+| Lane | What | Command |
+|------|------|---------|
+| **Cognitive review** | 3 LLMs, synthesis, exploit paths | `trias submit` |
+| **Passive scan** | Mechanical checks, **one mode per run** | `trias scan static\|deps\|deploy` |
+| **Active trial** | Live URL probes | **[Peira](docs/SECURITY-LANES.md#three-lanes)** — separate project |
+
+- **`submit`** — deep code review; use `--focus security` (or performance, etc.).
+  **Default: one file at a time** through the full council (see
+  [FILE-BY-FILE-REVIEW.md](docs/FILE-BY-FILE-REVIEW.md)) so large submissions
+  are not skimmed.
+- **`scan`** — fast passive checks; **requires a mode** (`static`, `deps`, or `deploy`).
+  Optional `scan all` for deliberate full passive runs (CI/nightly only).
+- **Peira** — attacker / trial tool; Trias never sends active probes to prod.
+
+Full rationale and examples: **[docs/SECURITY-LANES.md](docs/SECURITY-LANES.md)**.
+
+**GB10 hardware test:** **[docs/GB10-TEST.md](docs/GB10-TEST.md)** — sync to Lenovo PGX and run sequential file review.
+
+```bash
+# Cognitive review
+trias submit --focus security app/server.py
+
+# Passive scan — one mode per run (optional .trias.yaml in project root)
+trias scan static --project /path/to/app
+trias scan deps   --project /path/to/app
+trias scan deploy --project /path/to/app
+
+# CI convenience only
+trias scan all --project /path/to/app
+
+# Separate tool — active trials
+peira --live https://your-app.example --profile travel-pdf
+```
 
 ## Quick Start
 
@@ -38,7 +77,56 @@ trias submit --wait --timeout 300 *.py
 trias submit --focus "security, performance" server.py
 trias status
 trias pull 20260613-092041-abc12345
+
+# Web GUI — GB10 control panel (Go button, live logs, multi-hour runs)
+
+Prerequisites on GB10: Gemma on `:8080`, Tailscale up. **Go rsyncs your Mac project to `~/pdf-fill-jason` automatically** (disable with checkbox or `trias gui --no-sync`).
+
+```bash
+pip install -e ~/tools/trias
+
+# From your Mac (browse local project, submit to GB10)
+trias gui \
+  --runtime gb10 \
+  --project ~/Documents/Coding/devhub/tools/pdf-fill-jason \
+  --gb10-host lenovo@100.85.15.59
+
+# Open http://127.0.0.1:8765/
+# Click Go — checks Gemma, starts worker if needed, submits, shows live progress + log tail
 ```
+
+| GUI feature | Behavior |
+|-------------|----------|
+| **Go** | rsync project → GB10 → check llama → start worker → submit |
+| **All files** | Toggle off extension filter; paste paths manually |
+| **Live panel** | File/reviewer progress, ETA, worker log tail (polls GB10 over SSH) |
+| **Queue** | Per-item position, ETA, and wait time (polls every 5s) |
+| **Completed tab** | Cards with HIGH/MED counts and clean vs needs-attention badge |
+| **Triage** | Action items (consensus + priority, skeptic-filtered), file coverage, dismissed findings |
+| **Full report** | Collapsible sections: Priority, Consensus, Skeptic, Raw reviews |
+
+### Reading a report in the GUI
+
+1. **While running** — live panel shows progress; triage opens automatically when status hits `completed`.
+2. **After the fact** — sidebar **Completed** tab → **Triage** (action list) or **Full** (markdown sections).
+3. **CLI fallback** — `trias pull TASK_ID --output .` writes `review-TASK_ID.md` locally.
+
+### Report API (for scripts / future Telegram)
+
+```bash
+# List completed reviews with severity summary
+curl -s http://127.0.0.1:8765/api/reports | python3 -m json.tool
+
+# Structured triage payload (action_items, file_coverage, sections, markdown)
+curl -s http://127.0.0.1:8765/api/reports/TASK_ID | python3 -m json.tool
+
+# Legacy — raw markdown only
+curl -s http://127.0.0.1:8765/api/results/TASK_ID
+```
+
+New runs write a JSON sidecar at `~/.trias/results/{TASK_ID}.json` on GB10 (parsed at write time). Older reports fall back to on-demand markdown parsing.
+
+Local-only runtime: `trias gui --runtime local` (requires local llama + worker).
 
 ## How It Works
 
@@ -129,47 +217,35 @@ real-world benchmarks from the machines it's been tested on.
 | **Storage** | 1 TB NVMe SSD |
 | **OS** | Ubuntu 24.04, kernel 6.17, aarch64 |
 | **CUDA** | 13.0 |
-| **Ollama** | 7 models loaded (19–65 GB each) |
+| **Inference** | llama.cpp `llama-server` (see [docs/LLAMA-CPP.md](docs/LLAMA-CPP.md)) |
 
-**Performance (measured tok/s):**
-
-| Model | Size | Quant | Eval Rate |
-|-------|------|-------|-----------|
-| qwen3-coder-next | 51 GB | q4_K_M | **59.1 tok/s** |
-| qwen2.5-coder:32b | 19 GB | — | 10.0 tok/s |
-| qwen3.6:35b-a3b (MoE) | 23 GB | — | ~73 tok/s |
-| gpt-oss:120b | 65 GB | — | ⚠️ locks GPU; not usable |
-
-**Typical review latency:** ~3–4 minutes per submission (3 models ×
-~60s each, including load/unload + synthesis).
+**Typical review latency:** depends on GGUF size and context; Gemma 4 31B on
+GB10 is ~30–60s per council round with synthesis + skeptic on the same server.
 
 ### Tower (Custom Build) — *benchmarks pending*
 
-Custom workstation, also ARM64 aarch64, serving Ollama and ComfyUI.
-Full specs and Trias benchmarks coming soon.
+Custom workstation, also ARM64 aarch64.
 
 ### Running on Smaller Hardware
 
-Trias cycles models sequentially — only one model is loaded at a time.
-You need enough GPU memory for your *largest* single model, not the sum
-of all three. On a machine with 24 GB VRAM, choose smaller quants or
-lighter models in `config.yaml`.
+One `llama-server` loads one GGUF at a time. You need enough GPU memory for
+that model's quant. Use smaller GGUFs or lower context in `serve-cuda.sh`.
 
 Minimum recommended: **16 GB VRAM** (for 7–8B models at Q4).
 
 ## Requirements
 
 - Python 3.10+
-- [Ollama](https://ollama.com) with models pulled
-- GPU memory: enough for your largest single model (see Hardware above)
+- **llama.cpp** `llama-server` with OpenAI API (`/v1/chat/completions`)
+- GPU memory for your loaded GGUF (see [docs/LLAMA-CPP.md](docs/LLAMA-CPP.md))
 
 ## Configuration
 
 ```bash
-trias init          # writes config.yaml with defaults
+cp config.example.yaml ~/.trias/config.yaml   # or trias init
 ```
 
-Edit `config.yaml` to customize models, paths, Ollama endpoint, timeouts.
+Edit `config.yaml` — set `llamacpp.url` and model ids from `GET /v1/models`.
 
 ## Remote Worker
 

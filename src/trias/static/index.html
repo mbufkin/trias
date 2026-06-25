@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trias — Code Review</title>
+  <style>
+    :root {
+      --bg: #0f1419; --panel: #1a2332; --border: #2d3a4d; --text: #e7ecf3;
+      --muted: #8b9cb3; --accent: #5b9fd4; --accent-dim: #3d6f99;
+      --ok: #3d9a6a; --warn: #c9a227; --err: #d45b5b;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    header { padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--border); }
+    header h1 { margin: 0; font-size: 1.2rem; display: inline; }
+    .status-bar { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.5rem; font-size: 0.8rem; }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+    .dot.ok { background: var(--ok); }
+    .dot.bad { background: var(--err); }
+    .dot.warn { background: var(--warn); }
+    main { display: grid; grid-template-columns: 1fr 360px; min-height: calc(100vh - 80px); }
+    @media (max-width: 960px) { main { grid-template-columns: 1fr; } }
+    section, aside { padding: 1rem 1.25rem; }
+    section { border-right: 1px solid var(--border); }
+    aside { background: var(--panel); }
+    label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 0.3rem; }
+    input[type="text"], select, textarea {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      border-radius: 6px; padding: 0.45rem 0.6rem; font-size: 0.88rem;
+    }
+    textarea { min-height: 60px; resize: vertical; font-family: ui-monospace, monospace; font-size: 0.8rem; }
+    button {
+      background: var(--accent); color: #fff; border: none; border-radius: 6px;
+      padding: 0.55rem 1rem; font-weight: 600; cursor: pointer; font-size: 0.9rem;
+    }
+    button:hover { background: var(--accent-dim); }
+    button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    button.go { width: 100%; font-size: 1rem; padding: 0.75rem; margin-top: 0.5rem; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .toolbar { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.5rem; }
+    .file-list { border: 1px solid var(--border); border-radius: 8px; max-height: 36vh; overflow: auto; background: var(--bg); }
+    .file-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.6rem; border-bottom: 1px solid var(--border); font-size: 0.82rem; }
+    .file-item code { color: var(--muted); font-size: 0.75rem; flex: 1; overflow: hidden; text-overflow: ellipsis; }
+    .field { margin-bottom: 0.85rem; }
+    .live-panel {
+      border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem;
+      background: var(--bg); display: none;
+    }
+    .live-panel.visible { display: block; }
+    .progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin: 0.5rem 0; }
+    .progress-bar > div { height: 100%; background: var(--accent); transition: width 0.3s; }
+    #logTail {
+      font-family: ui-monospace, monospace; font-size: 0.72rem; max-height: 180px;
+      overflow: auto; background: #0a0e12; padding: 0.5rem; border-radius: 4px; white-space: pre-wrap;
+      color: var(--muted); margin-top: 0.5rem;
+    }
+    #report { margin-top: 0.75rem; border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem;
+      max-height: 40vh; overflow: auto; font-size: 0.82rem; white-space: pre-wrap; display: none; }
+    #report.visible { display: block; }
+    .task { border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; margin-bottom: 0.4rem; font-size: 0.78rem; cursor: pointer; }
+    .task:hover { border-color: var(--accent); }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.3rem; }
+    .chip { background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 0.15rem 0.5rem; font-size: 0.72rem; cursor: pointer; }
+    .hint { font-size: 0.75rem; color: var(--muted); }
+    .warn-box { background: rgba(201,162,39,0.15); border: 1px solid var(--warn); border-radius: 6px; padding: 0.5rem; font-size: 0.8rem; margin: 0.5rem 0; display: none; }
+    .queue-panel { border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; background: var(--bg); }
+    .queue-panel h3 { margin: 0 0 0.5rem; font-size: 0.85rem; }
+    .queue-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+    .queue-table th, .queue-table td { text-align: left; padding: 0.35rem 0.4rem; border-bottom: 1px solid var(--border); }
+    .queue-table th { color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; font-size: 0.68rem; }
+    .queue-row-active { background: rgba(91, 159, 212, 0.08); }
+    .queue-empty { color: var(--muted); font-size: 0.78rem; }
+    .task-badge { display: none; margin-left: 0.5rem; padding: 0.15rem 0.45rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+    .task-badge.visible { display: inline-block; }
+    .task-badge.ok { background: rgba(61, 154, 106, 0.25); color: var(--ok); border: 1px solid var(--ok); }
+    .task-badge.err { background: rgba(212, 91, 91, 0.2); color: var(--err); border: 1px solid var(--err); }
+    .task.done { border-color: var(--ok); }
+    .task.failed { border-color: var(--err); }
+    .task.watching { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-dim); }
+    .task-tabs { display: flex; gap: 0.35rem; margin-bottom: 0.5rem; }
+    .task-tabs button { flex: 1; padding: 0.35rem; font-size: 0.75rem; }
+    .task-tabs button.active { background: var(--accent); border-color: var(--accent); }
+    .report-card {
+      border: 1px solid var(--border); border-radius: 8px; padding: 0.55rem; margin-bottom: 0.45rem;
+      font-size: 0.76rem; background: var(--bg);
+    }
+    .report-card.attention { border-color: var(--err); }
+    .report-card.clean { border-color: var(--ok); }
+    .report-card .meta { color: var(--muted); margin: 0.25rem 0; }
+    .report-card .stats { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.35rem 0; }
+    .stat-chip { border-radius: 999px; padding: 0.1rem 0.45rem; font-size: 0.68rem; border: 1px solid var(--border); }
+    .stat-chip.high { color: var(--err); border-color: var(--err); }
+    .stat-chip.ok { color: var(--ok); border-color: var(--ok); }
+    .report-card .btn-row { display: flex; gap: 0.35rem; margin-top: 0.35rem; }
+    .report-card .btn-row button { flex: 1; padding: 0.35rem; font-size: 0.72rem; }
+    .triage-panel {
+      border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem;
+      background: var(--bg); display: none;
+    }
+    .triage-panel.visible { display: block; }
+    .triage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .triage-header h3 { margin: 0; font-size: 0.9rem; }
+    .triage-block { margin-bottom: 0.75rem; }
+    .triage-block h4 { margin: 0 0 0.35rem; font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .action-item {
+      border-left: 3px solid var(--border); padding: 0.4rem 0.55rem; margin-bottom: 0.35rem;
+      background: var(--panel); border-radius: 0 4px 4px 0; font-size: 0.8rem;
+    }
+    .action-item.sev-HIGH, .action-item.sev-CRITICAL { border-left-color: var(--err); }
+    .action-item.sev-MEDIUM { border-left-color: var(--warn); }
+    .action-item.sev-LOW { border-left-color: var(--muted); }
+    .action-item .sev { font-weight: 700; font-size: 0.72rem; }
+    .file-pill { display: inline-block; margin: 0.15rem; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.72rem; border: 1px solid var(--border); }
+    .file-pill.issue { border-color: var(--err); color: var(--err); }
+    .file-pill.clean { border-color: var(--ok); color: var(--ok); }
+    .dismissed-item { color: var(--muted); font-size: 0.75rem; padding: 0.25rem 0; text-decoration: line-through; }
+    details.triage-details { margin-top: 0.5rem; font-size: 0.8rem; }
+    details.triage-details summary { cursor: pointer; color: var(--accent); margin-bottom: 0.35rem; }
+    .section-tabs { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.5rem; }
+    .section-tabs button { padding: 0.25rem 0.5rem; font-size: 0.7rem; }
+    .section-tabs button.active { background: var(--accent); }
+    .md-content { max-height: 50vh; overflow: auto; font-size: 0.82rem; line-height: 1.45; }
+    .md-content h2, .md-content h3 { margin: 0.75rem 0 0.35rem; font-size: 0.95rem; }
+    .md-content table { width: 100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 0.75rem; }
+    .md-content th, .md-content td { border: 1px solid var(--border); padding: 0.3rem 0.4rem; text-align: left; }
+    .md-content code { background: #0a0e12; padding: 0.1rem 0.25rem; border-radius: 3px; font-size: 0.85em; }
+    .md-content pre { background: #0a0e12; padding: 0.5rem; overflow: auto; border-radius: 4px; }
+    .empty-triage { color: var(--muted); font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Trias</h1>
+    <span class="hint" id="runtimeLabel">GB10 control panel</span>
+    <span class="task-badge" id="taskBadge"></span>
+    <div class="status-bar" id="statusBar">
+      <span><span class="dot bad" id="llamaDot"></span> Llama <span id="llamaText">…</span></span>
+      <span><span class="dot bad" id="workerDot"></span> Worker <span id="workerText">…</span></span>
+      <span>Queue: <strong id="queueDepth">0</strong></span>
+    </div>
+  </header>
+  <main>
+    <section>
+      <div class="field">
+        <label for="projectRoot">Project root (Mac — rsynced to GB10 on Go)</label>
+        <div class="toolbar">
+          <input type="text" id="projectRoot" style="flex:1" />
+          <button type="button" class="secondary" id="loadFiles">Load</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <label><input type="checkbox" id="allFiles" checked /> All files</label>
+        <button type="button" class="secondary" id="selectAll">Select all</button>
+        <button type="button" class="secondary" id="selectNone">Clear</button>
+        <span class="hint" id="selectedCount">0 selected</span>
+      </div>
+      <div class="file-list" id="fileList"></div>
+      <div class="field" style="margin-top:0.75rem">
+        <label for="pathPaste">Paste paths (one per line, relative to project)</label>
+        <textarea id="pathPaste" placeholder="app/server.py&#10;cte_pdf_fill/pipeline.py"></textarea>
+        <button type="button" class="secondary" id="addPaths" style="margin-top:0.35rem">Add pasted paths</button>
+      </div>
+      <div class="queue-panel" id="queuePanel">
+        <h3>Queue <span class="hint" id="queueSummary"></span></h3>
+        <div id="queueBody"><span class="queue-empty">Loading queue…</span></div>
+      </div>
+      <div class="live-panel" id="livePanel">
+        <strong id="liveTitle">Running…</strong>
+        <div class="hint" id="liveDetail"></div>
+        <div class="progress-bar"><div id="progressFill" style="width:0%"></div></div>
+        <div class="hint" id="liveEta"></div>
+        <pre id="logTail"></pre>
+      </div>
+      <div class="triage-panel" id="triagePanel">
+        <div class="triage-header">
+          <h3 id="triageTitle">Report triage</h3>
+          <button type="button" class="secondary" id="closeTriage">Close</button>
+        </div>
+        <div class="triage-block" id="triageSummaryBlock"></div>
+        <div class="triage-block" id="triageActionsBlock"></div>
+        <div class="triage-block" id="triageFilesBlock"></div>
+        <details class="triage-details" id="triageDismissedDetails">
+          <summary>Dismissed by skeptic</summary>
+          <div id="triageDismissed"></div>
+        </details>
+        <details class="triage-details" id="triageFullDetails">
+          <summary>Full report</summary>
+          <div class="section-tabs" id="reportSectionTabs"></div>
+          <div id="reportView" class="md-content"></div>
+        </details>
+      </div>
+    </section>
+    <aside>
+      <div class="field">
+        <label for="reviewMode">Review mode</label>
+        <select id="reviewMode"></select>
+      </div>
+      <div class="field">
+        <label for="fileStrategy">File strategy</label>
+        <select id="fileStrategy"></select>
+      </div>
+      <div class="field">
+        <label for="focus">Focus</label>
+        <textarea id="focus"></textarea>
+        <div class="chip-row" id="focusPresets"></div>
+      </div>
+      <div class="warn-box" id="longRunWarn"></div>
+      <label id="syncWrap" style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;margin-bottom:0.5rem;text-transform:none;letter-spacing:0">
+        <input type="checkbox" id="syncBeforeGo" checked /> Sync project to GB10 before Go
+      </label>
+      <button type="button" class="go" id="goBtn">Go</button>
+      <p class="hint" id="goHint">Go → rsync Mac project → GB10 → check Gemma → submit. Multi-hour runs OK.</p>
+      <div class="field" style="margin-top:1rem">
+        <label>Tasks</label>
+        <div class="task-tabs">
+          <button type="button" class="secondary active" data-tab="active" id="tabActive">Active</button>
+          <button type="button" class="secondary" data-tab="completed" id="tabCompleted">Completed</button>
+        </div>
+        <div id="activeTaskList"></div>
+        <div id="completedReports" style="display:none"></div>
+      </div>
+    </aside>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let config = {};
+    let selected = new Set();
+    let activeTaskId = null;
+    let liveTimer = null;
+    let logTimer = null;
+    let runtimeTimer = null;
+    let queueTimer = null;
+    let logOffset = 0;
+    let watchedTerminal = false;
+    let currentReport = null;
+    let reportsTimer = null;
+    const baseTitle = document.title;
+
+    function esc(s) {
+      return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    /** Lightweight markdown → HTML for report sections (no external deps). */
+    function renderMarkdown(md) {
+      if (!md) return "";
+      let html = esc(md);
+      html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
+      html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
+      html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+      html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+      // Pipe tables
+      html = html.replace(/((?:^\|.+\|\s*\n)+)/gm, (block) => {
+        const rows = block.trim().split("\n").filter((r) => r.trim().startsWith("|"));
+        if (rows.length < 2) return block;
+        const body = rows.filter((r) => !/^\|\s*:?-{3,}/.test(r)).map((r) => {
+          const cells = r.split("|").slice(1, -1).map((c) => `<td>${c.trim()}</td>`).join("");
+          const sev = /HIGH|CRITICAL/.test(r) ? " sev-high" : /MEDIUM/.test(r) ? " sev-medium" : "";
+          return `<tr class="${sev}">${cells}</tr>`;
+        }).join("");
+        return `<table>${body}</table>`;
+      });
+      html = html.replace(/^\d+\.\s+(.+)$/gm, "<p>$1</p>");
+      html = html.replace(/\n---\n/g, "<hr/>");
+      html = html.replace(/\n/g, "<br/>");
+      return html;
+    }
+
+    function shortId(id) { return (id || "").slice(-8); }
+
+    function summaryLine(s) {
+      if (!s) return "No summary";
+      if (s.needs_attention) return `${s.high || 0} HIGH · ${s.medium || 0} MED · ${s.action_count || 0} actions`;
+      if ((s.consensus_count || 0) === 0) return "Clean — no consensus findings";
+      return `${s.consensus_count} findings · skeptic filtered`;
+    }
+
+    function fmtMin(m) {
+      if (m == null || Number.isNaN(m)) return "—";
+      const n = Math.round(Number(m));
+      if (n < 60) return `${n}m`;
+      const h = Math.floor(n / 60);
+      const r = n % 60;
+      return r ? `${h}h ${r}m` : `${h}h`;
+    }
+
+    function showTaskBadge(status, taskId) {
+      const badge = $("taskBadge");
+      badge.classList.add("visible");
+      badge.classList.remove("ok", "err");
+      if (status === "completed") {
+        badge.classList.add("ok");
+        badge.textContent = `Done · ${taskId.slice(-8)}`;
+        document.title = `✓ Trias — ${taskId.slice(-8)} done`;
+      } else {
+        badge.classList.add("err");
+        badge.textContent = `Failed · ${taskId.slice(-8)}`;
+        document.title = `✗ Trias — ${taskId.slice(-8)} failed`;
+      }
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(`Trias ${status}`, { body: taskId, tag: taskId });
+      }
+    }
+
+    function clearTaskBadge() {
+      $("taskBadge").classList.remove("visible", "ok", "err");
+      $("taskBadge").textContent = "";
+      document.title = baseTitle;
+    }
+
+    async function requestNotifyPermission() {
+      if ("Notification" in window && Notification.permission === "default") {
+        try { await Notification.requestPermission(); } catch (_) {}
+      }
+    }
+
+    async function api(path, opts) {
+      let res;
+      try { res = await fetch(path, opts); }
+      catch { throw new Error("Cannot reach Trias GUI server"); }
+      let data;
+      try { data = await res.json(); } catch { throw new Error(`Server error (${res.status})`); }
+      if (!res.ok) throw new Error(data.error || res.statusText);
+      return data;
+    }
+
+    function updateSelectedCount() {
+      const n = selected.size;
+      $("selectedCount").textContent = `${n} selected`;
+      const warn = $("longRunWarn");
+      if (n >= 20) {
+        warn.style.display = "block";
+        warn.textContent = `~${n * 3 * 4} min estimated on GB10 (${n} files × 3 reviewers).`;
+      } else warn.style.display = "none";
+    }
+
+    function renderFiles(files) {
+      const list = $("fileList");
+      if (!files.length) {
+        list.innerHTML = "<div class='file-item'><em>No files — check project path</em></div>";
+        return;
+      }
+      list.innerHTML = files.map((f) => `
+        <label class="file-item">
+          <input type="checkbox" data-path="${f.path}" ${selected.has(f.path) ? "checked" : ""} />
+          <span>${f.name}</span>
+          <code>${f.path}</code>
+        </label>`).join("");
+      list.querySelectorAll("input").forEach((cb) => {
+        cb.addEventListener("change", () => {
+          if (cb.checked) selected.add(cb.dataset.path);
+          else selected.delete(cb.dataset.path);
+          updateSelectedCount();
+        });
+      });
+    }
+
+    async function loadFiles() {
+      const root = $("projectRoot").value.trim();
+      const all = $("allFiles").checked ? "1" : "0";
+      const data = await api(`/api/files?root=${encodeURIComponent(root)}&all=${all}`);
+      renderFiles(data.files);
+    }
+
+    function fillSelect(el, options, valueKey) {
+      el.innerHTML = options.map((o) =>
+        `<option value="${o.id}" ${o.id === valueKey ? "selected" : ""}>${o.label}</option>`).join("");
+    }
+
+    async function refreshRuntime() {
+      try {
+        const r = await api("/api/runtime");
+        $("llamaDot").className = "dot " + (r.llama?.ok ? "ok" : "bad");
+        $("llamaText").textContent = r.llama?.ok ? "OK" : (r.llama?.hint || "down");
+        const w = r.worker || {};
+        $("workerDot").className = "dot " + (w.running ? "ok" : "bad");
+        $("workerText").textContent = w.running ? (w.pid ? `PID ${w.pid}` : "running") : "stopped";
+        $("queueDepth").textContent = w.queue_depth ?? 0;
+        $("runtimeLabel").textContent = `${r.mode || "gb10"} → ${r.gb10_host || ""} · ${r.pdf_dir || ""}`;
+      } catch (e) {
+        $("llamaText").textContent = "error";
+      }
+    }
+
+    async function refreshTasks() {
+      try {
+        const data = await api("/api/tasks");
+        const active = (data.tasks || []).filter((t) => t.status !== "completed");
+        $("activeTaskList").innerHTML = active.slice(0, 10).map((t) => {
+          const st = t.status || "?";
+          const cls = [st === "failed" ? "failed" : "", t.task_id === activeTaskId ? "watching" : ""].filter(Boolean).join(" ");
+          return `<div class="task ${cls}" data-id="${t.task_id}"><code>${t.task_id}</code><br/><span>${st}</span></div>`;
+        }).join("") || "<em>No active tasks</em>";
+        $("activeTaskList").querySelectorAll(".task").forEach((el) => {
+          el.onclick = () => watchTask(el.dataset.id);
+        });
+      } catch (_) {}
+    }
+
+    async function refreshReports() {
+      try {
+        const data = await api("/api/reports?limit=15");
+        const reports = data.reports || [];
+        $("completedReports").innerHTML = reports.map((r) => {
+          const s = r.summary || {};
+          const cls = r.needs_attention ? "attention" : "clean";
+          const fileCount = (r.files || []).length;
+          return `<div class="report-card ${cls}" data-id="${r.task_id}">
+            <code>${r.task_id}</code>
+            <div class="meta">${fileCount} files · ${esc(r.focus || "review")}</div>
+            <div class="stats">
+              ${r.needs_attention ? `<span class="stat-chip high">${summaryLine(s)}</span>` : `<span class="stat-chip ok">Clean</span>`}
+              ${s.skeptic_stands ? `<span class="stat-chip">${s.skeptic_stands} stands</span>` : ""}
+            </div>
+            <div class="btn-row">
+              <button type="button" class="secondary btn-triage" data-id="${r.task_id}">Triage</button>
+              <button type="button" class="secondary btn-full" data-id="${r.task_id}">Full</button>
+            </div>
+          </div>`;
+        }).join("") || "<em>No completed reports</em>";
+        $("completedReports").querySelectorAll(".btn-triage").forEach((btn) => {
+          btn.onclick = (e) => { e.stopPropagation(); openTriage(btn.dataset.id); };
+        });
+        $("completedReports").querySelectorAll(".btn-full").forEach((btn) => {
+          btn.onclick = (e) => { e.stopPropagation(); openTriage(btn.dataset.id, true); };
+        });
+      } catch (_) {
+        $("completedReports").innerHTML = "<em>Reports unavailable</em>";
+      }
+    }
+
+    function switchTaskTab(tab) {
+      $("tabActive").classList.toggle("active", tab === "active");
+      $("tabCompleted").classList.toggle("active", tab === "completed");
+      $("activeTaskList").style.display = tab === "active" ? "block" : "none";
+      $("completedReports").style.display = tab === "completed" ? "block" : "none";
+      if (tab === "completed") refreshReports();
+    }
+
+    function renderQueue(q) {
+      const active = q.active;
+      const waiting = q.waiting || [];
+      const depth = q.queue_depth ?? waiting.length;
+      $("queueDepth").textContent = depth + (active ? 1 : 0);
+      const totalWait = q.total_wait_minutes ?? 0;
+      $("queueSummary").textContent = active
+        ? `(~${fmtMin(totalWait)} until queue clears)`
+        : waiting.length ? `(~${fmtMin(totalWait)} if worker starts now)` : "";
+
+      if (!active && !waiting.length) {
+        $("queueBody").innerHTML = "<span class='queue-empty'>Queue empty — submit with Go</span>";
+        return;
+      }
+
+      const rows = [];
+      if (active) {
+        rows.push(`<tr class="queue-row-active">
+          <td>#${active.position}</td>
+          <td><code>${active.task_id}</code></td>
+          <td>${active.status}</td>
+          <td>${active.file_count || "?"} files</td>
+          <td>${fmtMin(active.eta_minutes_remaining)} left</td>
+          <td>—</td>
+        </tr>`);
+      }
+      waiting.forEach((w) => {
+        rows.push(`<tr>
+          <td>#${w.position}</td>
+          <td><code>${w.task_id}</code></td>
+          <td>queued</td>
+          <td>${w.file_count} files</td>
+          <td>${fmtMin(w.eta_minutes)} job</td>
+          <td>~${fmtMin(w.wait_minutes)} wait</td>
+        </tr>`);
+      });
+
+      $("queueBody").innerHTML = `<table class="queue-table">
+        <thead><tr><th>#</th><th>Task</th><th>Status</th><th>Size</th><th>ETA</th><th>Wait</th></tr></thead>
+        <tbody>${rows.join("")}</tbody>
+      </table>`;
+    }
+
+    async function refreshQueue() {
+      try {
+        const q = await api("/api/queue");
+        renderQueue(q);
+      } catch (_) {
+        $("queueBody").innerHTML = "<span class='queue-empty'>Queue unavailable</span>";
+      }
+    }
+
+    function formatLive(d) {
+      if (d.status === "reviewing") {
+        return `File ${d.file_index || "?"}/${d.file_total || "?"} · R${d.round}/${d.total} · ${d.current_file || ""}`;
+      }
+      return d.status || "…";
+    }
+
+    function stopLivePoll() {
+      if (liveTimer) clearInterval(liveTimer);
+      if (logTimer) clearInterval(logTimer);
+      liveTimer = logTimer = null;
+    }
+
+    async function pollLive() {
+      if (!activeTaskId) return;
+      try {
+        const d = await api(`/api/tasks/${activeTaskId}/live`);
+        $("liveTitle").textContent = activeTaskId;
+        $("liveDetail").textContent = formatLive(d);
+        $("progressFill").style.width = (d.progress_pct || 0) + "%";
+        if (d.elapsed_s != null) {
+          $("liveEta").textContent = `Elapsed ${Math.floor(d.elapsed_s / 60)}m · ETA ~${d.eta_minutes || "?"}m total`;
+        }
+        if (d.status === "completed" || d.status === "failed") {
+          stopLivePoll();
+          $("liveDetail").textContent = d.status === "completed" ? "Done" : ("Failed: " + (d.error || ""));
+          if (!watchedTerminal) {
+            watchedTerminal = true;
+            showTaskBadge(d.status, activeTaskId);
+          }
+          if (d.status === "completed") {
+            openTriage(activeTaskId);
+          }
+          refreshTasks();
+          refreshReports();
+          refreshQueue();
+        }
+      } catch (_) {}
+    }
+
+    async function pollLog() {
+      try {
+        const data = await api("/api/log?lines=150");
+        const lines = (data.log || "").split("\n");
+        $("logTail").textContent = lines.slice(-80).join("\n");
+        $("logTail").scrollTop = $("logTail").scrollHeight;
+      } catch (_) {}
+    }
+
+    function watchTask(taskId) {
+      activeTaskId = taskId;
+      watchedTerminal = false;
+      clearTaskBadge();
+      $("livePanel").classList.add("visible");
+      stopLivePoll();
+      pollLive();
+      pollLog();
+      liveTimer = setInterval(pollLive, 2000);
+      logTimer = setInterval(pollLog, 3000);
+      refreshTasks();
+    }
+
+    function renderTriage(report) {
+      currentReport = report;
+      const s = report.summary || {};
+      $("triageTitle").textContent = `Triage — ${report.task_id}`;
+      $("triageSummaryBlock").innerHTML = `<h4>Summary</h4>
+        <div class="hint">${(report.meta?.files || []).length} files · ${esc(report.meta?.focus || "")} ·
+        ${s.consensus_count || 0} consensus · ${s.skeptic_disproven || 0} disproven · ${s.skeptic_stands || 0} stands</div>`;
+
+      const actions = report.action_items || [];
+      if (actions.length) {
+        $("triageActionsBlock").innerHTML = `<h4>Needs attention</h4>` + actions.map((a, i) => `
+          <div class="action-item sev-${esc(a.severity)}">
+            <span class="sev">${esc(a.severity)}</span>
+            ${a.skeptic === "STANDS" ? " · <strong>Skeptic STANDS</strong>" : ""}
+            — ${esc(a.title)}<br/>
+            <span class="hint">${esc(a.file || "")} ${a.reviewers ? "· " + esc(a.reviewers) : ""}</span>
+          </div>`).join("");
+      } else {
+        $("triageActionsBlock").innerHTML = `<h4>Needs attention</h4><p class="empty-triage">No open action items — skeptic may have dismissed consensus findings, or run was clean.</p>`;
+      }
+
+      const fc = report.file_coverage || [];
+      if (fc.length) {
+        $("triageFilesBlock").innerHTML = `<h4>File coverage</h4>` + fc.map((f) =>
+          `<span class="file-pill ${f.has_issues ? "issue" : "clean"}">${f.has_issues ? "!" : "✓"} ${esc(f.file)}</span>`
+        ).join("");
+      } else $("triageFilesBlock").innerHTML = "";
+
+      const dismissed = report.dismissed_by_skeptic || [];
+      if (dismissed.length) {
+        $("triageDismissedDetails").style.display = "block";
+        $("triageDismissed").innerHTML = dismissed.map((d) =>
+          `<div class="dismissed-item">${esc(d.severity)} — ${esc(d.title)} (${esc(d.file || "")})</div>`
+        ).join("");
+      } else {
+        $("triageDismissedDetails").style.display = "none";
+      }
+
+      const sections = report.sections || {};
+      const tabs = [
+        ["priority", "Priority", sections.priority_md],
+        ["consensus", "Consensus", sections.consensus_md],
+        ["skeptic", "Skeptic", sections.skeptic_md],
+        ["raw", "Raw reviews", sections.raw_reviews_md],
+      ].filter((t) => t[2]);
+      $("reportSectionTabs").innerHTML = tabs.map(([id, label], i) =>
+        `<button type="button" class="secondary ${i === 0 ? "active" : ""}" data-section="${id}">${label}</button>`
+      ).join("");
+      $("reportSectionTabs").querySelectorAll("button").forEach((btn) => {
+        btn.onclick = () => showReportSection(btn.dataset.section);
+      });
+      if (tabs.length) showReportSection(tabs[0][0]);
+      else $("reportView").innerHTML = renderMarkdown(report.markdown || "");
+    }
+
+    function showReportSection(sectionId) {
+      if (!currentReport) return;
+      $("reportSectionTabs").querySelectorAll("button").forEach((b) => {
+        b.classList.toggle("active", b.dataset.section === sectionId);
+      });
+      const sections = currentReport.sections || {};
+      const map = {
+        priority: sections.priority_md,
+        consensus: sections.consensus_md,
+        skeptic: sections.skeptic_md,
+        raw: sections.raw_reviews_md,
+      };
+      $("reportView").innerHTML = renderMarkdown(map[sectionId] || "");
+    }
+
+    async function openTriage(taskId, expandFull) {
+      try {
+        const report = await api(`/api/reports/${taskId}`);
+        $("triagePanel").classList.add("visible");
+        renderTriage(report);
+        if (expandFull) {
+          $("triageFullDetails").open = true;
+        }
+      } catch (e) {
+        alert("Report not ready: " + e.message);
+      }
+    }
+
+    $("closeTriage").onclick = () => $("triagePanel").classList.remove("visible");
+    $("tabActive").onclick = () => switchTaskTab("active");
+    $("tabCompleted").onclick = () => switchTaskTab("completed");
+
+    $("goBtn").addEventListener("click", async () => {
+      const files = [...selected];
+      if (!files.length) { alert("Select at least one file"); return; }
+      $("goBtn").disabled = true;
+      const syncOn = $("syncBeforeGo").checked;
+      $("goBtn").textContent = syncOn ? "Syncing…" : "Starting…";
+      try {
+        const res = await api("/api/go", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            project_root: $("projectRoot").value.trim(),
+            files,
+            focus: $("focus").value.trim(),
+            review_mode: $("reviewMode").value,
+            file_strategy: $("fileStrategy").value,
+            sync: syncOn,
+          }),
+        });
+        if (res.sync?.status === "synced") {
+          $("goHint").textContent = `Synced to GB10 in ${res.sync.elapsed_s}s · submitted ${res.task_id}`;
+        }
+        watchTask(res.task_id);
+        refreshRuntime();
+        refreshTasks();
+        refreshQueue();
+        requestNotifyPermission();
+      } catch (e) {
+        alert(e.message);
+      } finally {
+        $("goBtn").disabled = false;
+        $("goBtn").textContent = "Go";
+      }
+    });
+
+    $("loadFiles").onclick = () => loadFiles().catch((e) => alert(e.message));
+    $("allFiles").onchange = () => loadFiles().catch(() => {});
+    $("selectAll").onclick = () => {
+      $("fileList").querySelectorAll("input").forEach((cb) => { cb.checked = true; selected.add(cb.dataset.path); });
+      updateSelectedCount();
+    };
+    $("selectNone").onclick = () => {
+      selected.clear();
+      $("fileList").querySelectorAll("input").forEach((cb) => { cb.checked = false; });
+      updateSelectedCount();
+    };
+    $("addPaths").onclick = async () => {
+      const paths = $("pathPaste").value.split("\n").map((s) => s.trim()).filter(Boolean);
+      if (!paths.length) return;
+      const data = await api("/api/files/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project_root: $("projectRoot").value.trim(), paths }),
+      });
+      (data.valid || []).forEach((p) => selected.add(p));
+      if (data.invalid?.length) alert("Invalid paths:\n" + data.invalid.join("\n"));
+      await loadFiles();
+      $("fileList").querySelectorAll("input").forEach((cb) => { cb.checked = selected.has(cb.dataset.path); });
+      updateSelectedCount();
+    };
+
+    async function init() {
+      config = await api("/api/config");
+      $("projectRoot").value = config.default_project || "";
+      fillSelect($("reviewMode"), config.review_modes, config.review_mode);
+      fillSelect($("fileStrategy"), config.file_strategies, config.file_strategy);
+      $("focus").value = config.focus || "";
+      $("focusPresets").innerHTML = (config.focus_presets || []).map((p) =>
+        `<span class="chip" data-focus="${p}">${p}</span>`).join("");
+      $("focusPresets").querySelectorAll(".chip").forEach((c) => {
+        c.onclick = () => { $("focus").value = c.dataset.focus; };
+      });
+      $("syncBeforeGo").checked = config.sync_before_go !== false;
+      $("syncWrap").style.display = config.runtime === "gb10" ? "flex" : "none";
+      await loadFiles();
+      await refreshRuntime();
+      await refreshTasks();
+      await refreshReports();
+      await refreshQueue();
+      runtimeTimer = setInterval(refreshRuntime, 15000);
+      queueTimer = setInterval(refreshQueue, 5000);
+      reportsTimer = setInterval(refreshReports, 30000);
+      setInterval(refreshTasks, 30000);
+    }
+    init().catch((e) => alert("Init failed: " + e.message));
+  </script>
+</body>
+</html>

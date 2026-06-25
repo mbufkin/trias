@@ -1,0 +1,45 @@
+# Trias — llama.cpp only (copy to config.yaml or ~/.trias/config.yaml)
+#
+# Start a server first, e.g. on GB10:
+#   systemctl --user start llama-cuda@gemma4-31b
+#   curl http://127.0.0.1:8080/v1/models
+
+paths:
+  mailbox: ~/.trias
+
+llamacpp:
+  url: http://localhost:8080/v1/chat/completions
+  timeout: 600
+  # api_key: optional
+
+review:
+  mode: council
+  file_strategy: sequential
+  max_file_chars: 12000
+  synthesis_chars_per_file: 4000
+  num_predict: 2048
+  temperature: 0.3
+  poll_interval: 15
+  focus: security, correctness, deep vs shallow modules, seams & interfaces
+
+# model = id from GET /v1/models (often the GGUF path or alias)
+# url = optional per-role server (different port / GGUF)
+council:
+  - model: /home/lenovo/llama.cpp/models/gemma4-31b.gguf
+    label: Security — data flow, sinks, exploit chains
+  - model: /home/lenovo/llama.cpp/models/gemma4-31b.gguf
+    label: Correctness — logic, edges, seams
+  - model: /home/lenovo/llama.cpp/models/gemma4-31b.gguf
+    label: Patterns — locality, leverage, maintainability
+
+synthesis:
+  model: /home/lenovo/llama.cpp/models/gemma4-31b.gguf
+  num_predict: 3072
+  temperature: 0.3
+
+skeptic:
+  enabled: true
+  model: /home/lenovo/llama.cpp/models/gemma4-31b.gguf
+  num_predict: 2048
+  temperature: 0.2
+  timeout: 600

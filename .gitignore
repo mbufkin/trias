@@ -4,7 +4,16 @@ dist/
 *.pyc
 .venv/
 venv/
+.pytest_cache/
+.DS_Store
+
+# Local config and runtime data (never commit secrets)
 config.yaml
 .mailbox/
 .trias/
+
+# Generated review output (use tests/fixtures/ for committed samples)
 review-*.md
+results/*
+!results/.gitkeep
+experiments/results/
